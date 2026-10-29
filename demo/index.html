@@ -63,9 +63,14 @@ async function tick(){const s=await (await fetch('api/status')).json();
  if(!s.running){clearInterval(timer);$('run').disabled=false;if(s.result){sel.has_replay=true;$('replay').disabled=false;show(s.result,false)}}}
 $('replay').onclick=async()=>{const r=await fetch('api/replay/'+sel.id);if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}};
 function rootCause(md){const m=md.match(/\|\s*Root Cause\s*\|(.*)\|\s*$/m);if(!m)return '';
- const L=m[1].split('<br>').map(s=>s.trim()).filter(Boolean);
- return L.filter((s,i)=>/^\w+Expert\b/.test(s)||/^\d+\.\s/.test(s)||(s.length<80&&!/^[-*]|Report|Conclusion/.test(s)&&/^-/.test(L[i+1]||'')))
-  .map(s=>/^\w+Expert\b/.test(s)?`<b>${esc(s.split(' ')[0])}</b>`:`<div>• ${esc(s.replace(/^\d+\.\s*/,'').replace(/\*\*/g,''))}</div>`).join('')}
+ const L=m[1].split('<br>').map(s=>s.trim()).filter(Boolean),out=[],clean=s=>s.replace(/\*\*/g,'').replace(/\[\d+\]/g,'').replace(/[:.\s]+$/,'').trim();
+ const head=s=>/root cause|analysis|report|conclusion/i.test(s)&&s.length<40;
+ for(const [i,s] of L.entries()){let b;
+  if(/^\w+Expert\b/.test(s))out.push(`<b>${esc(s.split(' ')[0])}</b>`);
+  else if((b=s.match(/^(?:[-*]|\d+\.)\s*\*\*(.+?)\*\*/))&&!head(b[1]))out.push(`<div>• ${esc(clean(b[1]))}</div>`);
+  else if(/^\d+\.\s/.test(s)&&s.length<120)out.push(`<div>• ${esc(clean(s.replace(/^\d+\.\s*/,'')))}</div>`);
+  else if(s.length<80&&!/^[-*]/.test(s)&&!head(clean(s))&&/^-/.test(L[i+1]||''))out.push(`<div>• ${esc(clean(s))}</div>`)}
+ return out.join('')}
 function spark(v){const w=220,h=50,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1;
  return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>`${i*w/(v.length-1)},${h-4-(y-mn)/k*(h-8)}`).join(' ')}"/></svg>`}
 function show(r,isReplay){const c=cases.find(x=>x.id==r.case),rec=r.record;$('res').classList.remove('hide');
