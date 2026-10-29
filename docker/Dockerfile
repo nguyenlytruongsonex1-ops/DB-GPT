@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 # JRE cho module query_rewrite (jpype). Đặt APT_PKGS="" để bỏ qua.
-ARG APT_PKGS="default-jre-headless"
+ARG APT_PKGS="default-jre-headless g++"
 RUN if [ -n "$APT_PKGS" ]; then apt-get update && apt-get install -y --no-install-recommends $APT_PKGS && rm -rf /var/lib/apt/lists/*; fi
 WORKDIR /app
 COPY docker/requirements.txt /tmp/req.txt

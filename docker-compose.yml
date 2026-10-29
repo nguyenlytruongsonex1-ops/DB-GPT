@@ -64,7 +64,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    working_dir: /app/prometheus_service_docker
+    working_dir: /app
     entrypoint: []
-    command: ["python", "app.py"]
+    command: ["python", "prometheus_service_docker/app.py"]
+    environment: { PYTHONPATH: /app }
     ports: ["8023:8023"]

@@ -60,7 +60,7 @@ class wrap_tasksolving_env(base_env):
 
     def check_success(self, message):
 
-        if "\"solution\"" in message['content'].lower():
+        if "\"solution\"" in (message['content'] or '').lower():
             self.status = 1
         else:
             self.status = 0
