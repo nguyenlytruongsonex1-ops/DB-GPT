@@ -24,7 +24,7 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
    ```
 4. **Tạo file `.env`:** chạy `cp .env.example .env`, mở file ra và thay `sk-or-xxxx` bằng key của bạn. Không commit file này lên git.
 5. **Build và chạy:** `docker compose up -d --build`. Lần đầu mất khoảng 10 đến 20 phút.
-6. **Kiểm tra:** `docker compose ps`. Cả 7 service đều phải ở trạng thái `Up`.
+6. **Kiểm tra:** `docker compose ps`. Cả 8 service đều phải ở trạng thái `Up`.
 7. **Chẩn đoán thử:** chạy lệnh thứ 3 ở mục trên, mất khoảng 3 đến 4 phút. Thấy dòng `Diagnose Finished!` là xong.
 8. **Xem báo cáo:** mở file mới nhất trong `alert_results/GPT4-0613/`. Trường `report` là báo cáo dạng Markdown.
 9. **Tắt:** `docker compose down`.
@@ -39,6 +39,7 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
 | `prometheus` | 9090 | Thu metric từ 2 exporter, áp luật cảnh báo | http://localhost:9090: mục Graph để vẽ metric, Status → Targets để kiểm tra exporter, Alerts để xem cảnh báo |
 | `alertmanager` | 9093 | Gom cảnh báo rồi gửi webhook | http://localhost:9093 để xem cảnh báo đang bật |
 | `python_app` | 8023 | Nhận webhook từ Alertmanager và ghi lại ca bất thường | Chạy ngầm, xem log bằng `docker compose logs -f python_app` |
+| `demo` | 8080 | Trang web demo: chọn kịch bản, chạy, xem kết quả | Mở http://localhost:8080 |
 | `dbot` | — | D-Bot: chọn expert, gọi tool và LLM, viết báo cáo | `docker compose exec dbot python run_diagnose.py --anomaly_file <file>` |
 
 **Các ca mẫu:** từ `test_cases/testing_cases_1.json` đến `testing_cases_5.json`. Mỗi file là một ca bất thường đã có sẵn metric.
@@ -82,6 +83,16 @@ python3 -c "import json;print(json.load(open('test_cases/testing_cases_3.json'))
 **5. Theo dõi khi đang chạy:** mở terminal khác và chạy `docker compose logs -f dbot`. Trong log sẽ thấy expert nào được chọn, tool nào được gọi. Nếu thấy `HTTP 200` là LLM đang trả lời bình thường.
 
 **6. Tự tạo ca mới:** copy một file trong `test_cases/`, sửa phần `alerts` (tên cảnh báo, thời gian) và `labels`, rồi chạy với `--anomaly_file`.
+
+## Trang demo
+
+Mở **http://localhost:8080** sau khi `docker compose up -d` (service `demo`).
+
+1. Chọn 1 trong 5 kịch bản sự cố (tick **Hiện đáp án** để xem nguyên nhân thật).
+2. **Chạy chẩn đoán thật**: gọi OpenRouter, khoảng 3–4 phút, có thanh tiến độ và nhật ký từng bước (chuyên gia nào, dùng công cụ gì, số lần gọi LLM). Mỗi lúc chỉ chạy 1 lượt.
+3. **Chế độ xem lại**: hiện ngay kết quả đã lưu trong `demo_results/`, không cần chờ, không cần key. Mỗi lần chạy thật thành công sẽ ghi đè kết quả lưu.
+
+Kết quả gồm: đáp án đúng so với kết luận của D-Bot, chuyên gia được chọn, biểu đồ chỉ số bất thường và báo cáo đầy đủ. Mã nguồn: `demo/app.py`, `demo/index.html`.
 
 ## Đổi model
 

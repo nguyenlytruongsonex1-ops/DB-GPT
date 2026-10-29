@@ -60,6 +60,28 @@ services:
       postgres_db:
         condition: service_healthy
 
+  demo:   # trang demo web: http://localhost:8080
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    env_file: .env
+    environment:
+      OPENAI_BASE_URL: https://openrouter.ai/api/v1
+      PG_HOST: postgres_db
+      PG_PORT: "5432"
+      PG_USER: test
+      PG_PASSWORD: Test123_456
+      PG_DB: sysbench
+    command: ["uvicorn", "demo.app:app", "--host", "0.0.0.0", "--port", "8080"]
+    volumes:
+      - ./alert_results:/app/alert_results
+      - ./demo:/app/demo
+      - ./demo_results:/app/demo_results
+    ports: ["8080:8080"]
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
   python_app:   # nhận webhook từ alertmanager, ghi file chẩn đoán
     build:
       context: .

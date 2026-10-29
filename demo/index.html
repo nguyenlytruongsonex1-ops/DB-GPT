@@ -1,0 +1,80 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D-Bot · Bác sĩ AI cho cơ sở dữ liệu</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,sans-serif;color:#000;background:#fff}
+main{max-width:1100px;margin:auto;padding:24px}h1{margin:0;font-size:28px}h2{font-size:18px;border-bottom:2px solid #000;padding-bottom:4px;margin-top:32px}
+.sub{color:#444;margin:4px 0 0}.flow{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;font-size:13px}.flow span{border:1px solid #000;padding:4px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{border:1px solid #000;padding:12px;cursor:pointer}.card.sel{background:#000;color:#fff}.card small{display:block;font-family:monospace;margin:4px 0}
+.card .ans{font-size:12px;border-top:1px dashed currentColor;margin-top:8px;padding-top:6px;display:none}.show .ans{display:block}
+button{font:inherit;border:2px solid #000;background:#fff;padding:8px 18px;cursor:pointer}button.pri{background:#000;color:#fff}button:disabled{opacity:.4;cursor:default}
+.bar{height:18px;border:2px solid #000;margin:12px 0}.bar i{display:block;height:100%;background:#000;width:0;transition:width .5s}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#steps{font-size:13px;font-family:monospace;max-height:260px;overflow:auto;border-left:2px solid #000;padding-left:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.box{border:1px solid #000;padding:12px}.box h3{margin:0 0 8px;font-size:15px}
+.tag{display:inline-block;border:1px solid #000;padding:2px 8px;margin:2px;font-size:13px}
+#report{border:1px solid #000;padding:16px;overflow:auto}#report table{border-collapse:collapse}#report td,#report th{border:1px solid #999;padding:6px;vertical-align:top}
+svg{border:1px solid #000;background:#fff}.err{border:2px solid #000;padding:10px;font-weight:bold}.hide{display:none}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><main>
+<h1>D-Bot: bác sĩ AI cho cơ sở dữ liệu</h1>
+<p class="sub">Khi database có cảnh báo, D-Bot cử một nhóm chuyên gia AI đọc các chỉ số, tra cứu kiến thức, thảo luận với nhau rồi viết báo cáo nguyên nhân và cách khắc phục.</p>
+<div class="flow"><span>1. Cảnh báo</span>→<span>2. Phân công chuyên gia</span>→<span>3. Điều tra chỉ số + tri thức</span>→<span>4. Thảo luận bàn tròn</span>→<span>5. Báo cáo</span></div>
+
+<h2>Bước 1 · Chọn kịch bản sự cố</h2>
+<div class="row"><label><input type="checkbox" id="ans"> Hiện đáp án</label></div>
+<div class="grid" id="cases" style="margin-top:10px"></div>
+<div class="row" style="margin-top:14px">
+ <button class="pri" id="run" disabled>Chạy chẩn đoán thật (~3–4 phút)</button>
+ <button id="replay" disabled>Chế độ xem lại (kết quả đã lưu)</button>
+</div>
+
+<div id="prog" class="hide"><h2>Bước 2 · D-Bot đang làm việc</h2>
+ <div class="row"><b id="stage">…</b><span id="meta"></span></div>
+ <div class="bar"><i id="bari"></i></div><div id="steps"></div><div id="err"></div></div>
+
+<div id="res" class="hide"><h2>Bước 3 · Kết quả chẩn đoán</h2>
+ <p id="rmeta"></p>
+ <div class="cols"><div class="box"><h3>Đáp án đúng (nguyên nhân thật)</h3><div id="truth"></div></div>
+  <div class="box"><h3>D-Bot kết luận</h3><div id="dbot"></div></div></div>
+ <h3>Chuyên gia được chọn</h3><div id="experts"></div>
+ <h3>Chỉ số bất thường nổi bật</h3><div id="metrics" class="grid"></div>
+ <h3>Báo cáo đầy đủ</h3><div id="report"></div></div>
+</main><script>
+let cases=[],sel=null,timer=null;const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function load(){cases=await (await fetch('api/cases')).json();
+ $('cases').innerHTML=cases.map(c=>`<div class="card" data-id="${c.id}"><b>${c.id}. ${esc(c.title)}</b><small>⚠ ${c.alert}: ${esc(c.alert_desc)}</small>${esc(c.desc)}<div class="ans">Đáp án: ${c.labels.map(esc).join(', ')}</div></div>`).join('');
+ document.querySelectorAll('.card').forEach(e=>e.onclick=()=>pick(+e.dataset.id));
+ const s=await (await fetch('api/status')).json(); if(s.running){pick(s.case);poll()}}
+function pick(id){sel=cases.find(c=>c.id==id);document.querySelectorAll('.card').forEach(e=>e.classList.toggle('sel',e.dataset.id==id));
+ $('run').disabled=false;$('replay').disabled=!sel.has_replay;$('replay').title=sel.has_replay?'':'Chưa có kết quả lưu sẵn'}
+$('ans').onchange=e=>$('cases').classList.toggle('show',e.target.checked);
+const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+$('run').onclick=async()=>{const r=await fetch('api/run/'+sel.id,{method:'POST'});if(!r.ok){alert((await r.json()).detail);return}
+ $('res').classList.add('hide');poll()};
+function poll(){$('prog').classList.remove('hide');$('run').disabled=true;clearInterval(timer);timer=setInterval(tick,1500);tick()}
+async function tick(){const s=await (await fetch('api/status')).json();
+ $('stage').textContent=s.stage||'Khởi động…';$('meta').textContent=`⏱ ${fmt(s.elapsed||0)} · ${s.llm_calls} lần gọi LLM`;
+ $('bari').style.width=(s.progress||0)+'%';
+ $('steps').innerHTML=s.steps.map(x=>`<div>[${fmt(x.t)}] ${esc(x.text)}</div>`).join('');$('steps').scrollTop=1e9;
+ $('err').innerHTML=s.error?`<p class="err">✖ ${esc(s.error)}</p>`:'';
+ if(!s.running){clearInterval(timer);$('run').disabled=false;if(s.result){sel.has_replay=true;$('replay').disabled=false;show(s.result,false)}}}
+$('replay').onclick=async()=>{const r=await fetch('api/replay/'+sel.id);if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}};
+function rootCause(md){const m=md.match(/\|\s*Root Cause\s*\|(.*)\|\s*$/m);if(!m)return '';
+ const L=m[1].split('<br>').map(s=>s.trim()).filter(Boolean);
+ return L.filter((s,i)=>/^\w+Expert\b/.test(s)||/^\d+\.\s/.test(s)||(s.length<80&&!/^[-*]|Report|Conclusion/.test(s)&&/^-/.test(L[i+1]||'')))
+  .map(s=>/^\w+Expert\b/.test(s)?`<b>${esc(s.split(' ')[0])}</b>`:`<div>• ${esc(s.replace(/^\d+\.\s*/,'').replace(/\*\*/g,''))}</div>`).join('')}
+function spark(v){const w=220,h=50,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1;
+ return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>`${i*w/(v.length-1)},${h-4-(y-mn)/k*(h-8)}`).join(' ')}"/></svg>`}
+function show(r,isReplay){const c=cases.find(x=>x.id==r.case),rec=r.record;$('res').classList.remove('hide');
+ $('rmeta').textContent=`Kịch bản ${r.case}: ${c.title} · ${isReplay?'Xem lại kết quả đã chạy lúc '+new Date(r.finished_at*1000).toLocaleString('vi-VN'):'Vừa chạy xong'} · mất ${fmt(r.elapsed)} · ${r.llm_calls} lần gọi LLM${r.model?' · model '+r.model:''}`;
+ $('truth').innerHTML=c.labels.map(l=>`<span class="tag">${esc(l)}</span>`).join('');
+ $('dbot').innerHTML=rootCause(rec.report)||'<i>(xem báo cáo bên dưới)</i>';
+ $('experts').innerHTML=r.experts.map(e=>`<span class="tag">${esc(e)}</span>`).join('');
+ const tm=r.metrics||[];
+ $('metrics').innerHTML=tm.map(m=>`<div><small>${esc(m.title)}</small><br>${spark(m.values)}</div>`).join('')||'<i>Không có</i>';
+ $('report').innerHTML=marked.parse(rec.report);$('res').scrollIntoView({behavior:'smooth'})}
+load().then(()=>{const h=location.hash.match(/(case|replay)=(\d)/);if(h&&!sel){pick(+h[2]);if(h[1]=='replay')$('replay').click()}});
+</script></body></html>
