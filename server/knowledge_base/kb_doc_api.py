@@ -89,6 +89,7 @@ def search_docs(
         # print no_replicate_docs separated by \n
         for doc in no_replicate_docs:
             print(doc[0].metadata)
+            print("[KBDOC] " + __import__("json").dumps(dict(doc[0].metadata, kb=knowledge_base_name, score=float(doc[1])), ensure_ascii=False, default=str))  # demo đọc dòng này
         print('*' * 100)
     
     return data

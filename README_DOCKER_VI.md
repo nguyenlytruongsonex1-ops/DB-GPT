@@ -102,6 +102,8 @@ Kết quả gồm: đáp án đúng so với kết luận của D-Bot, chuyên g
 
 **Lịch sử báo cáo**: bảng mọi kết quả đã lưu (`demo_results/` + `alert_results/`), lọc theo model, bấm một dòng để mở. Màn kết quả có thêm **dòng thời gian hội thoại** từng chuyên gia, **thảo luận bàn tròn** (bấm để mở rộng) và **biểu đồ topMetrics** (SVG, chạy offline). Không tốn tiền OpenRouter.
 
+**Log trực tiếp + nút Dừng**: khi chạy thật, khung đen hiện log của `run_diagnose.py`; bấm **■ Dừng** để kill cả nhóm tiến trình, rồi chạy lại được ngay. **JSON cảnh báo đầu vào**: bấm mở ở Bước 1 và màn kết quả. **Tài liệu tri thức đã dùng**: bảng các tài liệu D-Bot lấy từ kho tri thức (lần chạy mới có điểm số; bản cũ trích từ tin nhắn chuyên gia).
+
 ## Đổi model
 
 Sửa `LLM_MODEL` trong `.env`, mặc định là `openai/gpt-4o-mini`, rồi chạy `docker compose up -d`. Nên dùng model mạnh vì prompt gốc viết cho GPT-4.

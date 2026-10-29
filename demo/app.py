@@ -1,11 +1,13 @@
 """Trang demo D-Bot: chọn kịch bản -> chạy run_diagnose.py -> xem tiến độ + kết quả."""
-import ast, glob, json, os, re, subprocess, threading, time
+import ast, glob, json, os, re, shlex, signal, subprocess, threading, time
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAVE = os.path.join(ROOT, "demo_results")
 EST = 200  # giây, thời gian chạy ước lượng
+CMD = os.environ.get("DEMO_CMD", "python run_diagnose.py --anomaly_file {f}")  # DEMO_CMD: lệnh giả để test
+LOGN = 300
 CASES = {
     1: ("Đọc dữ liệu quá lớn", "Ứng dụng kéo về khối dữ liệu khổng lồ bằng truy vấn lồng nhau, máy chủ bị quá tải."),
     2: ("Xoá dữ liệu hàng loạt", "Một tác vụ xoá rất nhiều dòng cùng lúc, CPU máy chủ lên gần 100%."),
@@ -49,7 +51,20 @@ def enrich(res):
     seen, out = set(), []
     for m in tm:
         if m.get("title") not in seen and m.get("values"): seen.add(m["title"]); out.append(m)
-    return dict(res, metrics=out[:12])
+    return dict(res, metrics=out[:12], knowledge=res.get("knowledge") or kb_from_msgs(res["record"]))
+
+
+def kb_from_msgs(rec):
+    """Bản ghi cũ: lấy tri thức từ câu 'The matched knowledge ... is:' trong tin nhắn chuyên gia."""
+    out, seen = [], set()
+    for ex, v in (rec.get("anomalyAnalysis") or {}).items():
+        for m in v.get("messages", []):
+            for blk in re.findall(r"matched knowledge[^:]{0,60}?is:(.*?)(?:<br><br>(?=The )|\\n\\n|$)", str(m.get("data", "")), re.S):
+                for it in re.split(r"(?:^|<br>)\s*\d+\.\s", blk.strip()):
+                    it = re.sub(r"<[^>]+>", " ", it).strip()
+                    if len(it) > 15 and it[:80] not in seen:
+                        seen.add(it[:80]); out.append({"expert": ex, "desc": it[:600]})
+    return out
 
 
 def step(text):
@@ -60,13 +75,20 @@ def worker(n, model=None, out=None):
     t0 = state["start"]
     env = dict(os.environ, PYTHONUNBUFFERED="1")
     if model: env["LLM_MODEL"] = model
-    p = subprocess.Popen(["python", "run_diagnose.py", "--anomaly_file", case_file(n)], cwd=ROOT, env=env,
+    p = subprocess.Popen(shlex.split(CMD.format(f=case_file(n))), cwd=ROOT, env=env, start_new_session=True,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
-    state["pid"] = p.pid
+    state["proc"] = p
     expert = None
     tail = []
     for line in p.stdout:
         tail = (tail + [line.rstrip()[:300]])[-15:]
+        if "sk-" not in line: state["log"].append(line.rstrip()[:400]); del state["log"][:-LOGN]; state["log_n"] += 1
+        if line.startswith("[KBDOC] "):
+            try:
+                d = json.loads(line[8:])
+                state["knowledge"].append({"expert": expert, "kb": d.get("kb"), "cause": d.get("cause_name"), "score": round(d.get("score", 0), 3),
+                                           "desc": str(d.get("desc", ""))[:600]})
+            except Exception: pass
         if "chat/completions" in line:
             state["llm_calls"] += 1
             if " 401 " in line or "Unauthorized" in line:
@@ -86,17 +108,19 @@ def worker(n, model=None, out=None):
         m = re.search(r"^\s+Name: (\w+)", line)
         if m: step(f"{expert or 'Chuyên gia'} dùng công cụ: {TOOLS.get(m.group(1), m.group(1))}")
     p.wait()
+    state.pop("proc", None)
     files = [f for f in glob.glob(os.path.join(ROOT, "alert_results", "*", "*.jsonl")) if os.path.getmtime(f) >= t0]
     if p.returncode == 0 and files:
         rec = json.load(open(max(files, key=os.path.getmtime)))
         res = {"case": n, "elapsed": round(time.time() - t0), "llm_calls": state["llm_calls"], "kb_searches": state["kb_searches"], "kb_docs": state["kb_docs"],
                "experts": state["experts"], "steps": state["steps"], "record": rec,
-               "model": env.get("LLM_MODEL", ""), "finished_at": int(time.time())}
+               "model": env.get("LLM_MODEL", ""), "finished_at": int(time.time()), "knowledge": state["knowledge"]}
         step("Hoàn tất")
         d = os.path.join(SAVE, out) if out else SAVE  # out: thư mục phụ để so sánh, không ghi đè bản xem lại
         os.makedirs(d, exist_ok=True)
         json.dump(res, open(os.path.join(d, f"case_{n}.json"), "w"), ensure_ascii=False, indent=1)
         state["result"] = enrich(res)
+    elif state.get("stopped"): step("Đã dừng theo yêu cầu")
     elif not state.get("error"):
         state["error"] = f"Chẩn đoán lỗi (mã {p.returncode}), xem log container"
         state["log_tail"] = [l for l in tail if "sk-" not in l]
@@ -118,14 +142,14 @@ def run(n: int, model: str = "", out: str = ""):
     with lock:
         if state.get("running"): raise HTTPException(409, "Đang có một lượt chạy, vui lòng chờ")
         state.clear(); state.update(running=True, case=n, start=time.time(), steps=[], llm_calls=0, kb_searches=0, kb_docs=0,
-                                    stage="", stage_pct=0, experts=[], result=None, error=None)
+                                    stage="", stage_pct=0, experts=[], result=None, error=None, log=[], log_n=0, knowledge=[], stopped=False)
     threading.Thread(target=worker, args=(n, model or None, out or None), daemon=True).start()
     return {"ok": True}
 
 
 @app.get("/api/status")
 def status():
-    s = {k: v for k, v in state.items() if k != "pid"}
+    s = {k: v for k, v in state.items() if k not in ("proc", "log")}
     if "start" in s:
         el = time.time() - s["start"]
         s["elapsed"] = round(el)
@@ -172,3 +196,28 @@ def result(id: str):
         r = {"case": None, "elapsed": None, "llm_calls": None, "experts": [k for k in r.get("anomalyAnalysis", {}) if k.endswith("Expert")],
              "record": r, "model": os.path.basename(os.path.dirname(f)), "finished_at": int(r.get("time") or 0)}
     return enrich(r)
+
+
+@app.post("/api/stop")
+def stop():
+    p = state.get("proc")
+    if not state.get("running") or not p: raise HTTPException(409, "Không có lượt chạy nào")
+    state["stopped"] = True
+    try:
+        os.killpg(p.pid, signal.SIGTERM); p.wait(5)
+    except subprocess.TimeoutExpired: os.killpg(p.pid, signal.SIGKILL)
+    except ProcessLookupError: pass
+    return {"ok": True}
+
+
+@app.get("/api/log")
+def log(since: int = 0):
+    """Trả các dòng log mới (since = số dòng client đã có)."""
+    L, n = state.get("log", []), state.get("log_n", 0)
+    return {"n": n, "lines": L[max(0, len(L) - (n - since)):] if since < n else []}
+
+
+@app.get("/api/alert/{n}")
+def alert(n: int):
+    if n not in CASES: raise HTTPException(404)
+    return json.load(open(case_file(n)))
