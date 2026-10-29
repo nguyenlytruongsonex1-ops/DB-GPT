@@ -49,7 +49,7 @@ def enrich(res):
     seen, out = set(), []
     for m in tm:
         if m.get("title") not in seen and m.get("values"): seen.add(m["title"]); out.append(m)
-    return dict(res, metrics=out[:6])
+    return dict(res, metrics=out[:12])
 
 
 def step(text):
@@ -138,3 +138,37 @@ def replay(n: int):
     f = os.path.join(SAVE, f"case_{n}.json")
     if not os.path.exists(f): raise HTTPException(404, "Chưa có kết quả lưu sẵn cho kịch bản này")
     return enrich(json.load(open(f)))
+
+
+def _rel(f): return os.path.relpath(f, ROOT)
+
+
+@app.get("/api/history")
+def history():
+    """Liệt kê mọi kết quả đã lưu: demo_results (có case/model) + alert_results gốc."""
+    out = []
+    for f in glob.glob(os.path.join(SAVE, "**", "case_*.json"), recursive=True):
+        try: r = json.load(open(f))
+        except Exception: continue
+        sub = os.path.relpath(os.path.dirname(f), SAVE)
+        out.append({"id": _rel(f), "case": r.get("case"), "model": r.get("model") or "", "set": "" if sub == "." else sub,
+                    "time": r.get("finished_at"), "elapsed": r.get("elapsed"), "severity": r["record"].get("severity"),
+                    "title": r["record"].get("title", "")})
+    for f in glob.glob(os.path.join(ROOT, "alert_results", "*", "*.jsonl")):
+        try: r = json.load(open(f)); t = int(r.get("time") or 0)
+        except Exception: continue
+        out.append({"id": _rel(f), "case": None, "model": os.path.basename(os.path.dirname(f)), "set": "alert_results",
+                    "time": t, "elapsed": None, "severity": r.get("severity"), "title": r.get("title", "")})
+    return sorted(out, key=lambda x: -(x["time"] or 0))
+
+
+@app.get("/api/result")
+def result(id: str):
+    f = os.path.realpath(os.path.join(ROOT, id))
+    ok = any(f.startswith(os.path.join(ROOT, d) + os.sep) for d in ("demo_results", "alert_results"))
+    if not ok or not os.path.isfile(f) or not f.endswith((".json", ".jsonl")): raise HTTPException(404)
+    r = json.load(open(f))
+    if "record" not in r:  # bản ghi gốc alert_results
+        r = {"case": None, "elapsed": None, "llm_calls": None, "experts": [k for k in r.get("anomalyAnalysis", {}) if k.endswith("Expert")],
+             "record": r, "model": os.path.basename(os.path.dirname(f)), "finished_at": int(r.get("time") or 0)}
+    return enrich(r)

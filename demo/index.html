@@ -16,6 +16,10 @@ button{font:inherit;border:2px solid #000;background:#fff;padding:8px 18px;curso
 .tag{display:inline-block;border:1px solid #000;padding:2px 8px;margin:2px;font-size:13px}
 #report{border:1px solid #000;padding:16px;overflow:auto}#report table{border-collapse:collapse}#report td,#report th{border:1px solid #999;padding:6px;vertical-align:top}
 svg{border:1px solid #000;background:#fff}.err{border:2px solid #000;padding:10px;font-weight:bold}.hide{display:none}
+.hist{width:100%;border-collapse:collapse;font-size:13px}.hist td,.hist th{border:1px solid #000;padding:4px 8px;text-align:left}.hist tr:hover td{background:#eee;cursor:pointer}
+#histwrap{max-height:320px;overflow:auto}.tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.col{border:1px solid #000}.col>b{display:block;background:#000;color:#fff;padding:6px 10px}
+details{border-top:1px dashed #000;padding:6px 10px;font-size:13px}details summary{cursor:pointer;font-weight:600}details .md{max-height:320px;overflow:auto}.md p{margin:4px 0}.md table{width:100%;table-layout:fixed;word-break:break-word;font-size:12px}.md ul{margin:4px 0;padding-left:18px}
+.charts{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}.charts svg text{font:10px monospace}
 @media(max-width:700px){.cols{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>D-Bot: bác sĩ AI cho cơ sở dữ liệu</h1>
@@ -30,6 +34,9 @@ svg{border:1px solid #000;background:#fff}.err{border:2px solid #000;padding:10p
  <button id="replay" disabled>Chế độ xem lại (kết quả đã lưu)</button>
 </div>
 
+<h2>Lịch sử báo cáo đã lưu</h2><div class="row"><input id="hq" placeholder="Lọc theo model / tiêu đề…" style="font:inherit;padding:6px;border:1px solid #000;width:280px"><span id="hn"></span></div>
+<div id="histwrap" style="margin-top:8px"><table class="hist"><thead><tr><th>Thời gian</th><th>Kịch bản</th><th>Model / bộ</th><th>Thời lượng</th><th>Mức độ</th><th>Tiêu đề</th></tr></thead><tbody id="hist"></tbody></table></div>
+
 <div id="prog" class="hide"><h2>Bước 2 · D-Bot đang làm việc</h2>
  <div class="row"><b id="stage">…</b><span id="meta"></span></div>
  <div class="bar"><i id="bari"></i></div><div id="steps"></div><div id="err"></div></div>
@@ -39,7 +46,9 @@ svg{border:1px solid #000;background:#fff}.err{border:2px solid #000;padding:10p
  <div class="cols"><div class="box"><h3>Đáp án đúng (nguyên nhân thật)</h3><div id="truth"></div></div>
   <div class="box"><h3>D-Bot kết luận</h3><div id="dbot"></div></div></div>
  <h3>Chuyên gia được chọn</h3><div id="experts"></div>
- <h3>Chỉ số bất thường nổi bật</h3><div id="metrics" class="grid"></div>
+ <h3>Dòng thời gian hội thoại chuyên gia</h3><div id="tl" class="tl"></div>
+ <h3>Thảo luận bàn tròn (brainstorming)</h3><div id="rt" class="col"></div>
+ <h3>Biểu đồ chỉ số bất thường (topMetrics)</h3><div id="metrics" class="charts"></div>
  <h3>Báo cáo đầy đủ</h3><div id="report"></div></div>
 </main><script>
 let cases=[],sel=null,timer=null;const $=id=>document.getElementById(id);
@@ -60,7 +69,7 @@ async function tick(){const s=await (await fetch('api/status')).json();
  $('bari').style.width=(s.progress||0)+'%';
  $('steps').innerHTML=s.steps.map(x=>`<div>[${fmt(x.t)}] ${esc(x.text)}</div>`).join('');$('steps').scrollTop=1e9;
  $('err').innerHTML=s.error?`<p class="err">✖ ${esc(s.error)}</p>`:'';
- if(!s.running){clearInterval(timer);$('run').disabled=false;if(s.result){sel.has_replay=true;$('replay').disabled=false;show(s.result,false)}}}
+ if(!s.running){clearInterval(timer);$('run').disabled=false;if(s.result){sel.has_replay=true;$('replay').disabled=false;show(s.result,false);loadHist()}}}
 $('replay').onclick=async()=>{const r=await fetch('api/replay/'+sel.id);if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}};
 function rootCause(md){const m=md.match(/\|\s*Root Cause\s*\|(.*)\|\s*$/m);if(!m)return '';
  const L=m[1].split('<br>').map(s=>s.trim()).filter(Boolean),out=[],clean=s=>s.replace(/\*\*/g,'').replace(/\[\d+\]/g,'').replace(/[:.\s]+$/,'').trim();
@@ -73,13 +82,28 @@ function rootCause(md){const m=md.match(/\|\s*Root Cause\s*\|(.*)\|\s*$/m);if(!m
  return out.join('')}
 function spark(v){const w=220,h=50,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1;
  return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>`${i*w/(v.length-1)},${h-4-(y-mn)/k*(h-8)}`).join(' ')}"/></svg>`}
-function show(r,isReplay){const c=cases.find(x=>x.id==r.case),rec=r.record;$('res').classList.remove('hide');
- $('rmeta').textContent=`Kịch bản ${r.case}: ${c.title} · ${isReplay?'Xem lại kết quả đã chạy lúc '+new Date(r.finished_at*1000).toLocaleString('vi-VN'):'Vừa chạy xong'} · mất ${fmt(r.elapsed)} · ${r.llm_calls} lần gọi LLM${r.model?' · model '+r.model:''}`;
+function chart(m){const v=m.values,w=320,h=140,L=40,B=18,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1,n=v.length-1||1,f=x=>+x.toPrecision(3);
+ const X=i=>L+i*(w-L-6)/n,Y=y=>h-B-(y-mn)/k*(h-B-8),ti=esc(m.title.replace(/\s*\(for .*\)/,'')),who=(m.title.match(/\(for (.*)\)/)||[])[1]||'';
+ return `<div class="box" style="padding:8px"><small><b>${ti}</b>${who?' · '+esc(who):''}</small><svg width="100%" viewBox="0 0 ${w} ${h}"><line x1="${L}" y1="${h-B}" x2="${w}" y2="${h-B}" stroke="#000"/><line x1="${L}" y1="0" x2="${L}" y2="${h-B}" stroke="#000"/>
+ <text x="${L-3}" y="12" text-anchor="end">${f(mx)}</text><text x="${L-3}" y="${h-B}" text-anchor="end">${f(mn)}</text><text x="${L}" y="${h-4}">0</text><text x="${w-4}" y="${h-4}" text-anchor="end">${v.length} mẫu</text>
+ <polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}"/></svg></div>`}
+const md=t=>`<div class="md">${marked.parse(String(t||''))}</div>`;
+function msgs(list,open){return (list||[]).map((m,i)=>`<details${open&&i==list.length-1?' open':''}><summary>${m.time?'['+esc(m.time)+'] ':''}${m.sender?esc(m.sender)+': ':''}${esc(String(m.data||'').replace(/<[^>]*>/g,' ').replace(/[#*`|]/g,'').slice(0,70))}…</summary>${md(m.data)}</details>`).join('')||'<details><summary>(trống)</summary></details>'}
+function timeline(rec){const a=rec.anomalyAnalysis||{};
+ $('tl').innerHTML=Object.entries(a).filter(([k,v])=>(v.messages||[]).length).map(([k,v])=>`<div class="col"><b>${esc(k)} · ${(v.messages||[]).length} bước</b>${msgs(v.messages,true)}</div>`).join('')||'<i>Không có</i>';
+ const b=(rec.brainstorming||{}).messages||[];$('rt').innerHTML=`<b>${b.length} lượt phát biểu</b>`+msgs(b,false)}
+async function loadHist(){H=await (await fetch('api/history')).json();drawHist()}
+let H=[];function drawHist(){const q=$('hq').value.toLowerCase(),L=H.filter(x=>(x.model+' '+x.set+' '+x.title).toLowerCase().includes(q));$('hn').textContent=L.length+' / '+H.length+' báo cáo';
+ $('hist').innerHTML=L.map(x=>`<tr data-id="${esc(x.id)}"><td>${x.time?new Date(x.time*1000).toLocaleString('vi-VN'):'–'}</td><td>${x.case?'Ca '+x.case:'–'}</td><td>${esc(x.model)}${x.set?' <small>('+esc(x.set)+')</small>':''}</td><td>${x.elapsed?fmt(x.elapsed):'–'}</td><td>${esc((x.severity||[]).join(', ')||'–')}</td><td>${esc(x.title.slice(0,80))}</td></tr>`).join('');
+ document.querySelectorAll('#hist tr').forEach(e=>e.onclick=async()=>{const r=await fetch('api/result?id='+encodeURIComponent(e.dataset.id));if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}})}
+$('hq').oninput=drawHist;
+function show(r,isReplay){const c=cases.find(x=>x.id==r.case)||{title:r.record.title||'Báo cáo gốc',labels:['(không có đáp án cho bản ghi này)']},rec=r.record;$('res').classList.remove('hide');
+ $('rmeta').textContent=`${r.case?'Kịch bản '+r.case+': ':''}${c.title} · ${isReplay?'Xem lại kết quả đã chạy lúc '+new Date(r.finished_at*1000).toLocaleString('vi-VN'):'Vừa chạy xong'} · ${r.elapsed!=null?'mất '+fmt(r.elapsed)+' · ':''}${r.llm_calls!=null?r.llm_calls+' lần gọi LLM':''}${r.model?' · model '+r.model:''}`;
  $('truth').innerHTML=c.labels.map(l=>`<span class="tag">${esc(l)}</span>`).join('');
- $('dbot').innerHTML=rootCause(rec.report)||'<i>(xem báo cáo bên dưới)</i>';
- $('experts').innerHTML=r.experts.map(e=>`<span class="tag">${esc(e)}</span>`).join('');
+ $('dbot').innerHTML=rootCause(rec.report||'')||'<i>(xem báo cáo bên dưới)</i>';
+ timeline(rec);$('experts').innerHTML=(r.experts||[]).map(e=>`<span class="tag">${esc(e)}</span>`).join('');
  const tm=r.metrics||[];
- $('metrics').innerHTML=tm.map(m=>`<div><small>${esc(m.title)}</small><br>${spark(m.values)}</div>`).join('')||'<i>Không có</i>';
- $('report').innerHTML=marked.parse(rec.report);$('res').scrollIntoView({behavior:'smooth'})}
-load().then(()=>{const h=location.hash.match(/(case|replay)=(\d)/);if(h&&!sel){pick(+h[2]);if(h[1]=='replay')$('replay').click()}});
+ $('metrics').innerHTML=tm.map(chart).join('')||'<i>Không có</i>';
+ $('report').innerHTML=marked.parse(rec.report||'');$('res').scrollIntoView({behavior:'smooth'})}
+loadHist();load().then(()=>{const h=location.hash.match(/(case|replay)=(\d)/);if(h&&!sel){pick(+h[2]);if(h[1]=='replay')$('replay').click()}});
 </script></body></html>
