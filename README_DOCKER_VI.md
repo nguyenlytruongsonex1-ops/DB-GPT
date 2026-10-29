@@ -90,7 +90,7 @@ Mở **http://localhost:8080** sau khi `docker compose up -d` (service `demo`).
 
 1. Chọn 1 trong 5 kịch bản sự cố (tick **Hiện đáp án** để xem nguyên nhân thật).
 2. **Chạy chẩn đoán thật**: gọi OpenRouter, khoảng 3–4 phút, có thanh tiến độ và nhật ký từng bước (chuyên gia nào, dùng công cụ gì, số lần gọi LLM). Mỗi lúc chỉ chạy 1 lượt.
-3. **Chế độ xem lại**: hiện ngay kết quả đã lưu trong `demo_results/`, không cần chờ, không cần key. Mỗi lần chạy thật thành công sẽ ghi đè kết quả lưu.
+3. **Chế độ xem lại**: hiện ngay kết quả đã lưu trong `demo_results/`, không cần chờ, không cần key. Mỗi lần chạy thật thành công sẽ ghi đè kết quả lưu. Bản xem lại hiện dùng `qwen/qwen3-30b-a3b-instruct-2507`; các bản so sánh nằm trong `demo_results/<model>/`. Ngưỡng tra tri thức: biến `KB_SCORE_THRESHOLD` (mặc định 0.55).
 
 Kết quả gồm: đáp án đúng so với kết luận của D-Bot, chuyên gia được chọn, biểu đồ chỉ số bất thường và báo cáo đầy đủ. Mã nguồn: `demo/app.py`, `demo/index.html`.
 

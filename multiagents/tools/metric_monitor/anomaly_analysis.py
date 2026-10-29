@@ -3,6 +3,9 @@ from multiagents.tools.metric_monitor.anomaly_detection import detect_anomalies
 from prometheus_service_docker.prometheus_abnormal_metric import prometheus_metrics
 from multiagents.tools.metrics import *
 from multiagents.utils.markdown_format import generate_prometheus_chart_content
+# bge-small + chroma L2: khoảng cách tài liệu liên quan ~0.37-0.55, ngưỡng gốc 0.4 loại gần hết
+import os
+KB_SCORE_THRESHOLD = float(os.environ.get("KB_SCORE_THRESHOLD", "0.55"))
 from server.knowledge_base.kb_doc_api import search_docs, fetch_expert_kb_names
 from multiagents.initialization import LANGUAGE
 import copy
@@ -108,7 +111,7 @@ def metric_analysis_results(agent_name, kb_name, alert_metric, diag_id, enable_p
 
     docs_query = [metric_name for metric_name in top5_abnormal_metrics]
 
-    matched_docs = search_docs(str(docs_query), knowledge_base_name=kb_name, top_k=2, score_threshold=0.4)
+    matched_docs = search_docs(str(docs_query), knowledge_base_name=kb_name, top_k=2, score_threshold=KB_SCORE_THRESHOLD)
 
     docs_str = ""
     knowledge_list = []
@@ -182,7 +185,7 @@ def workload_analysis_results(agent_name, kb_name, diag_id):
         else:
             workload_str = f"The workload queries are:\n{workload_state}\n\n"
 
-        matched_docs = search_docs("workload", knowledge_base_name=kb_name, top_k=2, score_threshold=0.4)
+        matched_docs = search_docs("workload", knowledge_base_name=kb_name, top_k=2, score_threshold=KB_SCORE_THRESHOLD)
 
         if matched_docs != []:
             matched_docs_str = ""
@@ -224,7 +227,7 @@ def slow_query_analysis_results(agent_name, kb_name, diag_id):
             concat_slow_queries = "\n".join([f'{i+1}. The slow query statement is "{sql}"' for i, sql in enumerate(slow_queries)])
             slow_queries_str = f"The slow queries that should be optimized are:\n{concat_slow_queries}\n\n"
 
-        matched_docs = search_docs("slow query", knowledge_base_name=kb_name, top_k=2, score_threshold=0.4)
+        matched_docs = search_docs("slow query", knowledge_base_name=kb_name, top_k=2, score_threshold=KB_SCORE_THRESHOLD)
 
         if matched_docs != []:
 

@@ -24,7 +24,7 @@ class DBDiag(OutputParser):
             except:
                 raise OutputParserError("llm output is not str or dict")
         
-        cleaned_output = text.strip()
+        cleaned_output = (text or "").strip()  # qwen đôi khi trả content None
         cleaned_output = re.sub(r"\n+", "\n", cleaned_output)
 
         matches = list(re.finditer(r'\n|\\n', cleaned_output))

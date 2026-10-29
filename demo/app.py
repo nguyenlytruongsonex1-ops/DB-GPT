@@ -56,18 +56,23 @@ def step(text):
     state["steps"].append({"t": round(time.time() - state["start"]), "text": text})
 
 
-def worker(n):
+def worker(n, model=None, out=None):
     t0 = state["start"]
     env = dict(os.environ, PYTHONUNBUFFERED="1")
+    if model: env["LLM_MODEL"] = model
     p = subprocess.Popen(["python", "run_diagnose.py", "--anomaly_file", case_file(n)], cwd=ROOT, env=env,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
     state["pid"] = p.pid
     expert = None
+    tail = []
     for line in p.stdout:
+        tail = (tail + [line.rstrip()[:300]])[-15:]
         if "chat/completions" in line:
             state["llm_calls"] += 1
             if " 401 " in line or "Unauthorized" in line:
                 state["error"] = "OpenRouter trả 401: key sai/hết hạn"; p.kill()
+        m = re.search(r"知识库采用其中的(\d+)条", line)
+        if m: state["kb_searches"] += 1; state["kb_docs"] += int(m.group(1))
         m = re.search(r'<flow>\{"title": "([^"]+)".*"isCompleted": 0', line)
         if m and m.group(1) in STAGES:
             name, pct = STAGES[m.group(1)]
@@ -84,14 +89,17 @@ def worker(n):
     files = [f for f in glob.glob(os.path.join(ROOT, "alert_results", "*", "*.jsonl")) if os.path.getmtime(f) >= t0]
     if p.returncode == 0 and files:
         rec = json.load(open(max(files, key=os.path.getmtime)))
-        res = {"case": n, "elapsed": round(time.time() - t0), "llm_calls": state["llm_calls"],
+        res = {"case": n, "elapsed": round(time.time() - t0), "llm_calls": state["llm_calls"], "kb_searches": state["kb_searches"], "kb_docs": state["kb_docs"],
                "experts": state["experts"], "steps": state["steps"], "record": rec,
-               "model": os.environ.get("LLM_MODEL", ""), "finished_at": int(time.time())}
+               "model": env.get("LLM_MODEL", ""), "finished_at": int(time.time())}
         step("Hoàn tất")
-        json.dump(res, open(os.path.join(SAVE, f"case_{n}.json"), "w"), ensure_ascii=False, indent=1)
+        d = os.path.join(SAVE, out) if out else SAVE  # out: thư mục phụ để so sánh, không ghi đè bản xem lại
+        os.makedirs(d, exist_ok=True)
+        json.dump(res, open(os.path.join(d, f"case_{n}.json"), "w"), ensure_ascii=False, indent=1)
         state["result"] = enrich(res)
     elif not state.get("error"):
         state["error"] = f"Chẩn đoán lỗi (mã {p.returncode}), xem log container"
+        state["log_tail"] = [l for l in tail if "sk-" not in l]
     state["running"] = False
 
 
@@ -104,13 +112,14 @@ def cases(): return [case_info(n) for n in CASES]
 
 
 @app.post("/api/run/{n}")
-def run(n: int):
+def run(n: int, model: str = "", out: str = ""):
+    if out and not re.fullmatch(r"[\w.-]+", out): raise HTTPException(400)
     if n not in CASES: raise HTTPException(404)
     with lock:
         if state.get("running"): raise HTTPException(409, "Đang có một lượt chạy, vui lòng chờ")
-        state.clear(); state.update(running=True, case=n, start=time.time(), steps=[], llm_calls=0,
+        state.clear(); state.update(running=True, case=n, start=time.time(), steps=[], llm_calls=0, kb_searches=0, kb_docs=0,
                                     stage="", stage_pct=0, experts=[], result=None, error=None)
-    threading.Thread(target=worker, args=(n,), daemon=True).start()
+    threading.Thread(target=worker, args=(n, model or None, out or None), daemon=True).start()
     return {"ok": True}
 
 

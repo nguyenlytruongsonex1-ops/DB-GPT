@@ -168,8 +168,12 @@ class OpenAIChat(BaseChatModel):
                 except:
                     pass
 
-                if output is not None:
-                    output = remove_charts(output)
+                if not output and i < 3:  # model đôi khi trả content rỗng/None (vd. qwen): gọi lại tối đa 3 lần
+                    print("Empty LLM content. Try again.")
+                    output = ''
+                    continue
+                output = output or ''
+                output = remove_charts(output)
 
                 break
             except:
@@ -204,6 +208,7 @@ class OpenAIChat(BaseChatModel):
                 time.sleep(min(i**2, 60))
                 continue
 
+        output = output or ''
         cur_time = time.strftime("%H:%M:%S", time.localtime())
 
         if not self.enable_feedback and task in ['expert_root_cause', 'expert_solution', 'review', 'refine_root_cause', 'refine_solution']:
