@@ -45,6 +45,44 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
 
 **Luật cảnh báo:** `prometheus_service_docker/node_rules.yml` và `pgsql_rules.yml`.
 
+## Chạy kịch bản chẩn đoán
+
+Có 5 ca mẫu trong thư mục `test_cases/`. Mỗi ca có sẵn cảnh báo, metric và đáp án đúng (trường `labels`).
+
+| Ca | Cảnh báo | Nguyên nhân thật |
+|---|---|---|
+| 1 | Load cao | Đọc dữ liệu lớn, subquery lồng |
+| 2 | CPU cao | Xóa dữ liệu hàng loạt |
+| 3 | Load cao | Quá nhiều index |
+| 4 | Load cao | Commit hoặc insert đồng thời nhiều |
+| 5 | Load cao | Join kém, tranh chấp CPU |
+
+**1. Chạy một ca** (ví dụ ca 3):
+```bash
+docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testing_cases_3.json
+```
+
+**2. Chạy cả 5 ca** (khoảng 20 phút):
+```bash
+for i in 1 2 3 4 5; do docker compose exec -T dbot python run_diagnose.py --anomaly_file test_cases/testing_cases_$i.json; done
+```
+
+**3. Xem báo cáo mới nhất:**
+```bash
+f=$(ls -t alert_results/GPT4-0613/*.jsonl | head -1)
+python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['report'])" "$f"
+```
+
+**4. So với đáp án:**
+```bash
+python3 -c "import json;print(json.load(open('test_cases/testing_cases_3.json'))['labels'])"
+```
+Đọc phần **Root Cause** trong báo cáo. Nếu khớp với `labels` thì D-Bot chẩn đoán đúng.
+
+**5. Theo dõi khi đang chạy:** mở terminal khác và chạy `docker compose logs -f dbot`. Trong log sẽ thấy expert nào được chọn, tool nào được gọi. Nếu thấy `HTTP 200` là LLM đang trả lời bình thường.
+
+**6. Tự tạo ca mới:** copy một file trong `test_cases/`, sửa phần `alerts` (tên cảnh báo, thời gian) và `labels`, rồi chạy với `--anomaly_file`.
+
 ## Đổi model
 
 Sửa `LLM_MODEL` trong `.env`, mặc định là `openai/gpt-4o-mini`, rồi chạy `docker compose up -d`. Nên dùng model mạnh vì prompt gốc viết cho GPT-4.
