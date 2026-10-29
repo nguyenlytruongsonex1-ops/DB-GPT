@@ -6,6 +6,12 @@ Dùng LLM (gọi qua OpenRouter) để chẩn đoán lỗi PostgreSQL. Đã ch�
 
 Bản PDF: [docs/DBGPT_architecture_vi.pdf](docs/DBGPT_architecture_vi.pdf)
 
+## Setup xong sẽ thấy gì
+
+Mở http://localhost:8080: chọn kịch bản, bấm chạy (hoặc xem lại), xem kết luận và báo cáo của D-Bot.
+
+![Trang demo D-Bot](docs/demo_app.png)
+
 ## Chạy nhanh
 
 ```bash
