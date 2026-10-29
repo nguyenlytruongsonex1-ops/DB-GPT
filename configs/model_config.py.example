@@ -6,7 +6,7 @@ import os
 MODEL_ROOT_PATH = ""
 
 # 选用的 Embedding 名称
-EMBEDDING_MODEL = "text-embedding-ada-002"  # m3e-base
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "bge-small-en-v1.5")  # m3e-base
 
 # Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
 EMBEDDING_DEVICE = "auto"
@@ -41,9 +41,9 @@ TEMPERATURE = 0.7
 ONLINE_LLM_MODEL = {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
     "openai-api": {
-        "model_name": "gpt-4-0613",
-        "api_base_url": "https://api.openai.com/v1",
-        "api_key": "",
+        "model_name": os.environ.get("LLM_MODEL", "gpt-4-0613"),
+        "api_base_url": os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        "api_key": os.environ.get("OPENAI_API_KEY", ""),
         "openai_proxy": "",
     },
     # advise vLLM>=0.3.0, start the server with a chat model
@@ -66,6 +66,7 @@ ONLINE_LLM_MODEL = {
 MODEL_PATH = {
     "embed_model": {
         "text-embedding-ada-002": "your OPENAI_API_KEY",
+        "bge-small-en-v1.5": "BAAI/bge-small-en-v1.5",
     },
 
     "llm_model": {

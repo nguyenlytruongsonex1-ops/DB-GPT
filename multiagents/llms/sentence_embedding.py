@@ -13,7 +13,7 @@ def sentence_embedding(sentence: str, model: str = "sentence-transformer") -> Li
         model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "localized_llms/sentence_embedding/sentence-transformer/")
         try:
             embedder = SentenceTransformer(model_path)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError, OSError):
             # load from remote
             embedder = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 

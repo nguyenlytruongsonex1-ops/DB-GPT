@@ -30,11 +30,11 @@ IS_FEEDBACK_BY_UI = True
 # 数据库配置
 
 POSTGRESQL_CONFIG = {
-  "host": "182.XX.XX.XXX",
-  "port": 5432,
-  "user": "XXXX",
-  "password": "XXXXX",
-  "dbname": "postgres"
+  "host": os.environ.get("PG_HOST", "182.XX.XX.XXX"),
+  "port": int(os.environ.get("PG_PORT", 5432)),
+  "user": os.environ.get("PG_USER", "XXXX"),
+  "password": os.environ.get("PG_PASSWORD", "XXXXX"),
+  "dbname": os.environ.get("PG_DB", "postgres")
 }
 
 MYSQL_CONFIG = {

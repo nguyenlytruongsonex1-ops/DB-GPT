@@ -30,6 +30,8 @@ async def main(args):
 
     report, records = await multi_agents.run(args)
 
+    if isinstance(current_diag_time, str):  # metrics.py stores it as a string
+        current_diag_time = time.strptime(current_diag_time, "%Y-%m-%d-%H-%M-%S")
     cur_time = int(time.mktime(current_diag_time))
 
     current_diag_time = time.strftime("%Y-%m-%d-%H-%M-%S", current_diag_time)

@@ -1,0 +1,70 @@
+# D-Bot local: app + PostgreSQL 12 + Prometheus/Alertmanager + exporters (arm64 OK)
+services:
+  postgres_db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: Test123_456
+      POSTGRES_DB: sysbench
+    command: >
+      postgres -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all -c log_min_duration_statement=1000
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d sysbench"]
+      interval: 5s
+      retries: 20
+
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    volumes:
+      - ./prometheus_service_docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus_service_docker/node_rules.yml:/usr/local/prometheus/rules/node_rules.yml:ro
+      - ./prometheus_service_docker/pgsql_rules.yml:/usr/local/prometheus/rules/pgsql_rules.yml:ro
+    ports: ["9090:9090"]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - ./prometheus_service_docker/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports: ["9093:9093"]
+
+  node_exporter:
+    image: prom/node-exporter:v1.8.2
+    ports: ["9100:9100"]
+
+  pg_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://test:Test123_456@postgres_db:5432/sysbench?sslmode=disable
+    ports: ["9187:9187"]
+    depends_on: [postgres_db]
+
+  dbot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    env_file: .env
+    environment:
+      OPENAI_BASE_URL: https://openrouter.ai/api/v1
+      PG_HOST: postgres_db
+      PG_PORT: "5432"
+      PG_USER: test
+      PG_PASSWORD: Test123_456
+      PG_DB: sysbench
+    volumes:
+      - ./alert_results:/app/alert_results
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  python_app:   # nhận webhook từ alertmanager, ghi file chẩn đoán
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    working_dir: /app/prometheus_service_docker
+    entrypoint: []
+    command: ["python", "app.py"]
+    ports: ["8023:8023"]

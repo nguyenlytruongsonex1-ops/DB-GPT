@@ -1,0 +1,4 @@
+.git
+webui/node_modules
+.env
+alert_results
