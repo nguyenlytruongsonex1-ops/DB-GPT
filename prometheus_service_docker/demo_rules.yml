@@ -1,0 +1,14 @@
+groups:
+  - name: demo_live
+    interval: 5s
+    rules:
+      - alert: DemoLockContention
+        expr: pg_demo_lock_waits > 0
+        for: 15s
+        labels:
+          severity: warning
+          scenario: lock_contention
+          metric: pg_demo_lock_waits
+        annotations:
+          summary: "LIVE demo_lock: a session is waiting on a row lock"
+          description: "pg_demo_lock_waits={{ $value }}. Only schema demo_lock in database demo_live."

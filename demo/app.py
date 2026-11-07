@@ -1,7 +1,9 @@
 """Trang demo D-Bot: chọn kịch bản -> chạy run_diagnose.py -> xem tiến độ + kết quả."""
 import ast, glob, json, os, re, shlex, signal, subprocess, threading, time
+import urllib.error
+import urllib.request
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAVE = os.path.join(ROOT, "demo_results")
@@ -40,7 +42,9 @@ def case_info(n):
     a = d["alerts"][0]["alerts"][0]
     return {"id": n, "title": CASES[n][0], "desc": CASES[n][1], "alert": a["labels"]["alertname"],
             "alert_desc": a["annotations"]["description"].strip(), "labels": d["labels"],
-            "has_replay": os.path.exists(os.path.join(SAVE, f"case_{n}.json"))}
+            "has_replay": os.path.exists(os.path.join(SAVE, f"case_{n}.json")),
+            "live_workload": False,
+            "note": "Phát lại JSON lịch sử. Ca này chưa sinh tải SQL sống."}
 
 
 def enrich(res):
@@ -208,6 +212,41 @@ def stop():
     except subprocess.TimeoutExpired: os.killpg(p.pid, signal.SIGKILL)
     except ProcessLookupError: pass
     return {"ok": True}
+
+
+def _proxy(method, path, timeout=20):
+    url = os.environ.get("WEBHOOK_URL", "http://python_app:8023").rstrip("/") + path
+    req = urllib.request.Request(url, data=b"" if method == "POST" else None, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode()), resp.status
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode()
+        try:
+            body = json.loads(raw)
+        except Exception:
+            body = {"ok": False, "error": raw[:200]}
+        return body, exc.code
+    except Exception as exc:
+        return {"ready": False, "ok": False, "error": exc.__class__.__name__}, 503
+
+
+@app.get("/api/live/status")
+def live_status():
+    body, code = _proxy("GET", "/live/status")
+    return JSONResponse(body, status_code=code)
+
+
+@app.post("/api/live/start")
+def live_start():
+    body, code = _proxy("POST", "/live/start")
+    return JSONResponse(body, status_code=code)
+
+
+@app.post("/api/live/stop")
+def live_stop():
+    body, code = _proxy("POST", "/live/stop")
+    return JSONResponse(body, status_code=code)
 
 
 @app.get("/api/log")

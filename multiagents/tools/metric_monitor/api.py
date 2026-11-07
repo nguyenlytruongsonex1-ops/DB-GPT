@@ -44,8 +44,8 @@ def whether_is_abnormal_metric(
 
     if len(metric_values) > 0:
         metric_values = next(iter(metric_values.values()))
-        is_abnormal = detect_anomalies(
-            np.array(metric_values))
+        _score, is_abnormal = detect_anomalies(np.array(metric_values))
+        is_abnormal = bool(is_abnormal)
     else:
         is_abnormal = False
 

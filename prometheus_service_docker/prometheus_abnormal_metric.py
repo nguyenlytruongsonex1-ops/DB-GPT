@@ -1,23 +1,19 @@
 import json
-import threading
 import time
 import warnings
 import os
-from datetime import datetime
 import numpy as np
 import requests
 
 from configs import DIAGNOSTIC_RESULTS_PATH
 from prometheus_service_docker.yaml_utils import read_prometheus_metrics_yaml
+from prometheus_service_docker.live_common import load_prometheus_config, parse_rfc3339
+from multiagents.tools.metric_monitor.anomaly_detection import detect_anomalies
 
-PROMETHEUS_CONFIG = {
-    "api_url": "http://8.131.129.55:9090/",
-    "postgresql_exporter_instance": "112.27.58.65:9187",
-    "node_exporter_instance": "171.27.58.65:9100"
-}
+PROMETHEUS_CONFIG = load_prometheus_config()
 
 prometheus_metrics = read_prometheus_metrics_yaml(
-    config_path='./prometheus_service_docker/prometheus_metrics.yaml',
+    config_path=os.path.join(os.path.dirname(__file__), 'prometheus_metrics.yaml'),
     node_exporter_instance=PROMETHEUS_CONFIG.get('node_exporter_instance'),
     postgresql_exporter_instance=PROMETHEUS_CONFIG.get(
         'postgresql_exporter_instance'))
@@ -84,62 +80,8 @@ def processed_values(data):
 
 
 def prometheus(url, params):
-    res = requests.get(url=PROMETHEUS_CONFIG.get('api_url') + url, params=params)
-
+    res = requests.get(url=load_prometheus_config()['api_url'] + url, params=params, timeout=10)
     return res.json()
-
-
-def detect_anomalies(data, significance_level=0.2):
-    # assume the workload is steadily running
-    """
-    Detects anomalies in the given data using the KS test algorithm.
-
-    Args:
-        data (numpy.ndarray): 1-D array of data values.
-        significance_level (float): Level of significance for the KS test (default: 0.05).
-
-    Returns:
-        numpy.ndarray: Boolean array indicating anomalies (True) and non-anomalies (False).
-    """
-
-    sorted_data = np.sort(data)
-    n = len(sorted_data)
-
-    # Calculate the expected CDF assuming a normal distribution
-    expected_cdf = np.arange(1, n + 1) / n
-
-    # Calculate the empirical CDF
-    empirical_cdf = np.searchsorted(sorted_data, sorted_data, side='right') / n
-
-    # Calculate the maximum absolute difference between the expected and
-    # empirical CDFs
-    ks_statistic = np.max(np.abs(empirical_cdf - expected_cdf))
-
-    # Calculate the critical value based on the significance level and sample
-    # size
-    critical_value = np.sqrt(-0.1 * np.log(significance_level / 2) / n)
-
-    # pdb.set_trace()
-
-    # Compare the KS statistic with the critical value
-    anomalies = np.where(ks_statistic > critical_value, True, False)
-
-    '''
-    # Calculate the mean and standard deviation of the data
-    anomalies = False
-
-    mean = np.mean(data)
-    max_value = np.max(data)
-
-    #print("mean: ", mean)
-    #print("max_value: ", max_value)
-
-    if max_value > 2.05 * mean:
-        anomalies = True
-
-    '''
-
-    return ks_statistic, anomalies
 
 
 def obtain_exceptions_in_times(start_time: int, end_time: int):
@@ -166,7 +108,7 @@ def obtain_exceptions_in_times_with_metric_name(
 
     for metric_name, metric_values in detailed_metrics.items():
         anomaly_value, is_abnormal = detect_anomalies(np.array(metric_values))
-        if is_abnormal:
+        if bool(is_abnormal):
             # maintain the top 5 abnormal metrics
             if len(top5_abnormal_metrics) < TOP_N_METRICS:
                 top5_abnormal_metrics[metric_name] = processed_values(
@@ -208,11 +150,11 @@ def fetch_prometheus_metrics(args):
 
     for alert in alerts:
         # 获取alert的startsAt属性，并将其转换为UTC时间格式
-        alert_time = alert.get("startsAt")
-        alert_time = alert_time[:-4] + 'Z'
-
-        start_time = datetime.strptime(alert_time, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp() - 60 * 5
-        end_time = datetime.strptime(alert_time, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp() + 60
+        parsed = parse_rfc3339(alert.get("startsAt"))
+        if parsed is None:
+            raise ValueError("startsAt is unset")
+        start_time = parsed.timestamp() - 60 * 5
+        end_time = parsed.timestamp() + 60
 
         # 调用obtain_exceptions_in_times函数获取在指定时间范围内的异常，并返回结果
         exceptions = obtain_exceptions_in_times(start_time, end_time)
@@ -231,48 +173,3 @@ def fetch_prometheus_metrics(args):
     filename = str(int(time.time())) + '.json'
     with open(os.path.join(path, filename), 'w') as f:
         json.dump(args, f)
-
-
-if __name__ == '__main__':
-    test_data = {"receiver": "web\\.hook", "status": "resolved", "alerts": [{"status": "resolved",
-                                                                             "labels": {"alertname": "NodeLoadHigh",
-                                                                                        "category": "node",
-                                                                                        "instance": "172.27.58.65:9100",
-                                                                                        "job": "node", "level": "1",
-                                                                                        "severity": "WARN"},
-                                                                             "annotations": {
-                                                                                 "description": "node:ins:stdload1[ins=] = 2.10 > 100%\n",
-                                                                                 "summary": "WARN NodeLoadHigh @172.27.58.65:9100 2.10"},
-                                                                             "startsAt": "2023-09-19T15:28:49.467858611Z",
-                                                                             "endsAt": "2023-09-19T15:30:49.467858611Z",
-                                                                             "generatorURL": "http://iZ2ze0ree1kf7ccu4p1vcyZ:9090/graph?g0.expr=node%3Ains%3Astdload1+%3E+1&g0.tab=1",
-                                                                             "fingerprint": "ab4787213c7dd319"}],
-                 "groupLabels": {"alertname": "NodeLoadHigh"},
-                 "commonLabels": {"alertname": "NodeLoadHigh", "category": "node", "instance": "172.27.58.65:9100",
-                                  "job": "node", "level": "1", "severity": "WARN"},
-                 "commonAnnotations": {"description": "node:ins:stdload1[ins=] = 2.10 > 100%\n",
-                                       "summary": "WARN NodeLoadHigh @172.27.58.65:9100 2.10"},
-                 "externalURL": "http://iZ2ze0ree1kf7ccu4p1vcyZ:9093", "version": "4",
-                 "groupKey": "{}:{alertname=\"NodeLoadHigh\"}", "truncatedAlerts": 0}
-
-    thread = threading.Thread(target=fetch_prometheus_metrics, args=(test_data,))
-    thread.start()
-    print('========END=======')
-    # results = {}
-    #
-    # # 读取json文件
-    # with open("/Users/testing_set_with_workload.json", 'r') as f:
-    #     json_data = json.load(f)
-    #
-    #     # 遍历字典的key,value
-    #     for key, value in json_data.items():
-    #         start_time = value['start_time']
-    #         end_time = value['end_time']
-    #         exceptions = obtain_exceptions_in_times(start_time, end_time)
-    #         value['exceptions'] = exceptions
-    #         results[key] = value
-    #
-    #
-    # # 写入json文件
-    # with open("/Users/testing_set_with_workload_new.json", 'w') as f:
-    #     f.write(json.dumps(results))
