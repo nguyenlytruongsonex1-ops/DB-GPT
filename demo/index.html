@@ -24,16 +24,30 @@ details{border-top:1px dashed #000;padding:6px 10px;font-size:13px}details summa
 @media(max-width:700px){.cols{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>D-Bot: bác sĩ AI cho cơ sở dữ liệu</h1>
-<p class="sub">Khi database có cảnh báo, D-Bot cử một nhóm chuyên gia AI đọc các chỉ số, tra cứu kiến thức, thảo luận với nhau rồi viết báo cáo nguyên nhân và cách khắc phục.</p>
+<p class="sub">Hai chế độ tách biệt: LIVE sinh SQL trên schema demo_lock và đọc metric mới từ Prometheus. Năm ca phía dưới chỉ phát lại JSON lịch sử, không tạo tải.</p>
 <div class="flow"><span>1. Cảnh báo</span>→<span>2. Phân công chuyên gia</span>→<span>3. Điều tra chỉ số + tri thức</span>→<span>4. Thảo luận bàn tròn</span>→<span>5. Báo cáo</span></div>
 
-<h2>Bước 1 · Chọn kịch bản sự cố</h2>
+<h2>LIVE · Tranh chấp khóa (không phải JSON 2023)</h2>
+<p class="sub">Một ca đã nối: Postgres <b>demo_live</b> / schema <b>demo_lock</b> → postgres_exporter <b>pg_demo_lock_waits</b> → Prometheus → Alertmanager → webhook. Cổng LLM mặc định tắt, nên không có kết luận model cho đến khi có key riêng.</p>
+<div class="box" id="livebox">
+ <div class="row">
+  <button class="pri" id="livestart">Bắt đầu tranh chấp khóa</button>
+  <button id="livestop">Dừng và nhả khóa</button>
+  <b id="livebadge">…</b>
+ </div>
+ <p id="livemsg"></p>
+ <div id="livechart" class="charts"></div>
+ <pre class="json" id="livejson"></pre>
+</div>
+
+<h2>Phát lại offline · 5 ca JSON lịch sử (chưa có tải sống)</h2>
 <div class="row"><label><input type="checkbox" id="ans"> Hiện đáp án</label></div>
 <div class="grid" id="cases" style="margin-top:10px"></div>
 <details id="alertbox" class="hide" style="border:1px solid #000;margin-top:10px"><summary>JSON cảnh báo đầu vào (gửi cho D-Bot)</summary><pre class="json" id="alertjson"></pre></details>
 <div class="row" style="margin-top:14px">
- <button class="pri" id="run" disabled>Chạy chẩn đoán thật (~3–4 phút)</button>
- <button id="replay" disabled>Chế độ xem lại (kết quả đã lưu)</button>
+ <button class="pri" id="run" disabled>Chạy trên file JSON lịch sử (không tạo tải DB)</button>
+ <button id="replay" disabled>Xem lại kết quả đã lưu</button>
+ <span>Năm ca này không sinh SQL. Biểu đồ xem lại lấy từ demo_results.</span>
 </div>
 
 <h2>Lịch sử báo cáo đã lưu</h2><div class="row"><input id="hq" placeholder="Lọc theo model / tiêu đề…" style="font:inherit;padding:6px;border:1px solid #000;width:280px"><span id="hn"></span></div>
@@ -59,7 +73,7 @@ details{border-top:1px dashed #000;padding:6px 10px;font-size:13px}details summa
 let cases=[],sel=null,timer=null;const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 async function load(){cases=await (await fetch('api/cases')).json();
- $('cases').innerHTML=cases.map(c=>`<div class="card" data-id="${c.id}"><b>${c.id}. ${esc(c.title)}</b><small>⚠ ${c.alert}: ${esc(c.alert_desc)}</small>${esc(c.desc)}<div class="ans">Đáp án: ${c.labels.map(esc).join(', ')}</div></div>`).join('');
+ $('cases').innerHTML=cases.map(c=>`<div class="card" data-id="${c.id}"><b>${c.id}. ${esc(c.title)}</b><small>OFFLINE · chưa có tải sống</small><small>⚠ ${c.alert}: ${esc(c.alert_desc)}</small>${esc(c.desc)}<div class="ans">Đáp án: ${c.labels.map(esc).join(', ')}</div></div>`).join('');
  document.querySelectorAll('.card').forEach(e=>e.onclick=()=>pick(+e.dataset.id));
  const s=await (await fetch('api/status')).json(); if(s.running){pick(s.case);poll()}}
 function pick(id){sel=cases.find(c=>c.id==id);document.querySelectorAll('.card').forEach(e=>e.classList.toggle('sel',e.dataset.id==id));
@@ -116,5 +130,21 @@ function show(r,isReplay){const c=cases.find(x=>x.id==r.case)||{title:r.record.t
  const tm=r.metrics||[];
  $('metrics').innerHTML=tm.map(chart).join('')||'<i>Không có</i>';
  $('report').innerHTML=marked.parse(rec.report||'');$('res').scrollIntoView({behavior:'smooth'})}
+function liveChart(samples){if(!samples||samples.length<2)return '<i>Chưa có mẫu metric có mốc thời gian.</i>';
+ const v=samples.map(s=>+s.value),w=320,h=140,L=44,B=18,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1,n=v.length-1||1;
+ const X=i=>L+i*(w-L-6)/n,Y=y=>h-B-(y-mn)/k*(h-B-8),t0=new Date(samples[0].ts*1000).toLocaleTimeString('vi-VN'),t1=new Date(samples.at(-1).ts*1000).toLocaleTimeString('vi-VN');
+ return `<div class="box" style="padding:8px"><small><b>pg_demo_lock_waits</b> · trục thời gian thật</small><svg width="100%" viewBox="0 0 ${w} ${h}"><line x1="${L}" y1="${h-B}" x2="${w}" y2="${h-B}" stroke="#000"/><line x1="${L}" y1="0" x2="${L}" y2="${h-B}" stroke="#000"/><text x="${L-3}" y="12" text-anchor="end">${mx}</text><text x="${L-3}" y="${h-B}" text-anchor="end">${mn}</text><text x="${L}" y="${h-4}">${esc(t0)}</text><text x="${w-4}" y="${h-4}" text-anchor="end">${esc(t1)}</text><polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}"/></svg></div>`}
+async function liveTick(){let s;try{s=await (await fetch('/api/live/status')).json()}catch(e){s={ready:false,error:String(e)}}
+ const w=s.workload||{},d=(s.current&&s.current.diagnosis)||{},samples=(s.current&&s.current.metric&&s.current.metric.samples)||[];
+ $('livebadge').textContent=w.running?(w.phase==='holding'?'Đang giữ khóa':'Đang khởi động'):(s.ready?'Sẵn sàng':'Chưa sẵn sàng');
+ $('livestart').disabled=!!w.running||s.ready===false;$('livestop').disabled=!w.running;
+ const called=d.called===true?'ĐÃ gọi model':'CHƯA gọi model';
+ $('livemsg').textContent=(s.label||'LIVE')+' · '+(s.current?s.current.status||'chưa có webhook':'chưa có webhook')+' · '+called+(d.reason?' · '+d.reason:'')+(w.error?' · lỗi '+w.error:'')+(s.error?' · '+s.error:'');
+ $('livechart').innerHTML=liveChart(samples);
+ const view={checks:s.checks,workload:{phase:w.phase,running:w.running,error:w.error},metric:s.current&&s.current.metric,lock_waits:s.current&&s.current.lock_waits,diagnosis:d,errors:s.current&&s.current.errors,replay:false};
+ $('livejson').textContent=JSON.stringify(view,null,1)}
+$('livestart').onclick=async()=>{await fetch('/api/live/start',{method:'POST'});liveTick()};
+$('livestop').onclick=async()=>{await fetch('/api/live/stop',{method:'POST'});liveTick()};
+setInterval(liveTick,2000);liveTick();
 loadHist();load().then(()=>{const h=location.hash.match(/(case|replay)=(\d)/);if(h&&!sel){pick(+h[2]);if(h[1]=='replay')$('replay').click()}});
 </script></body></html>

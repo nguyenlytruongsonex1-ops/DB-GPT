@@ -36,4 +36,5 @@ def restart_decision():
     return cpu,mem
 
 
-restart_decision()  
+if __name__ == "__main__":
+    restart_decision()

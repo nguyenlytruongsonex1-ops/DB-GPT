@@ -60,13 +60,13 @@ memory_metrics:
     instance_from: postgresql
   - query: pg_settings_max_wal_size_bytes{instance="$instance"}
     instance_from: postgresql
-  - query: irate(pg_stat_bgwriter_buffers_alloc{instance="$instance"}[5m])
+  - query: irate(pg_stat_bgwriter_buffers_alloc_total{instance="$instance"}[5m])
     instance_from: postgresql
-  - query: irate(pg_stat_bgwriter_buffers_backend_fsync{instance="$instance"}[5m])
+  - query: irate(pg_stat_bgwriter_buffers_backend_fsync_total{instance="$instance"}[5m])
     instance_from: postgresql
-  - query: irate(pg_stat_bgwriter_buffers_checkpoint{instance="$instance"}[5m])
+  - query: irate(pg_stat_bgwriter_buffers_checkpoint_total{instance="$instance"}[5m])
     instance_from: postgresql
-  - query: irate(pg_stat_bgwriter_buffers_clean{instance="$instance"}[5m])
+  - query: irate(pg_stat_bgwriter_buffers_clean_total{instance="$instance"}[5m])
     instance_from: postgresql
   - query: irate(pg_stat_database_conflicts{instance="$instance"}[5m])
     instance_from: postgresql

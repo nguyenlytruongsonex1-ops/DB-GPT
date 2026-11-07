@@ -1,5 +1,15 @@
 import argparse
 
+def _flag(value):
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off"}:
+        return False
+    raise argparse.ArgumentTypeError("expected a boolean")
+
 def main_parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--anomaly_file', type=str, default="", required=True, help='the file name of batch anomaly flie name')
@@ -9,10 +19,10 @@ def main_parse_args():
     parser.add_argument('--max_hired_experts', type=int, default=2, required=False, help='the maximum number of hired experts')
     parser.add_argument('--max_api_num', type=int, default=5, required=False, help='the maximum number of tool apis for single llm at initialization stage')
     # parser.add_argument('--max_abnormal_metric_num', type=int, default=5, required=False, help='the maximum number of abnormal metrics (after detectiion) passed to single llm')
-    parser.add_argument('--enable_slow_query_log', type=bool, default=True, required=False, help='True for enabling the collection of slow queries from database logs')
-    parser.add_argument('--enable_workload_statistics_view', type=bool, default=True, required=False, help='True for enabling the collection of query template information from database view')
-    parser.add_argument('--enable_workload_sqls', type=bool, default=True, required=False, help='True for fetching the sql queries during the anomaly')
-    parser.add_argument('--enable_prometheus', type=bool, default=False, required=False, help='True for fetching monitoring metrics from prometheus; False for fetching monitoring metrics from anomaly files')
+    parser.add_argument('--enable_slow_query_log', type=_flag, default=True, required=False, help='True for enabling the collection of slow queries from database logs')
+    parser.add_argument('--enable_workload_statistics_view', type=_flag, default=True, required=False, help='True for enabling the collection of query template information from database view')
+    parser.add_argument('--enable_workload_sqls', type=_flag, default=True, required=False, help='True for fetching the sql queries during the anomaly')
+    parser.add_argument('--enable_prometheus', type=_flag, default=False, required=False, help='True fetches Prometheus only when the time window is recent; historical files stay on disk')
     # parser.add_argument('--process_num', type=int, default=10, required=False, help='Parallel level for batching diagnosis')
     parser.add_argument('--start_at_seconds', type=int, default=1696841344, required=False, help='the starting time of an anomaly')
     parser.add_argument('--end_at_seconds', type=int, default=1696841415, required=False, help='the end time of an anomaly')

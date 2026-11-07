@@ -1,52 +1,23 @@
 import numpy as np
-import requests
 
 
 def detect_anomalies(data, significance_level=0.2):
-    # assume the workload is steadily running 
+    """Robust outlier check (modified z-score). Returns (score, flagged).
 
+    A flat series is not flagged. The old KS compared a sorted sample to itself,
+    so a constant series scored about 1 and was always treated as abnormal.
+    significance_level stays in the signature for existing callers; the cutoff
+    is the fixed 3.5 modified-z threshold.
     """
-    Detects anomalies in the given data using the KS test algorithm.
-    
-    Args:
-        data (numpy.ndarray): 1-D array of data values.
-        significance_level (float): Level of significance for the KS test (default: 0.05).
-    
-    Returns:
-        numpy.ndarray: Boolean array indicating anomalies (True) and non-anomalies (False).
-    """
-
-    sorted_data = np.sort(data)
-    n = len(sorted_data)
-    
-    # Calculate the expected CDF assuming a normal distribution
-    expected_cdf = np.arange(1, n + 1) / n
-    
-    # Calculate the empirical CDF
-    empirical_cdf = np.searchsorted(sorted_data, sorted_data, side='right') / n
-    
-    # Calculate the maximum absolute difference between the expected and empirical CDFs
-    ks_statistic = np.max(np.abs(empirical_cdf - expected_cdf))
-    
-    # Calculate the critical value based on the significance level and sample size
-    critical_value = np.sqrt(-0.1 * np.log(significance_level / 2) / n)
-
-    # Compare the KS statistic with the critical value
-    anomalies = np.where(ks_statistic > critical_value, True, False)
-
-    '''
-    # Calculate the mean and standard deviation of the data
-    anomalies = False
-
-    mean = np.mean(data)
-    max_value = np.max(data)
-
-    #print("mean: ", mean)
-    #print("max_value: ", max_value)
-
-    if max_value > 2.05 * mean:
-        anomalies = True
-    
-    '''
-    
-    return ks_statistic, anomalies
+    arr = np.asarray([] if data is None else data, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size < 4:
+        return 0.0, False
+    med = float(np.median(arr))
+    mad = float(np.median(np.abs(arr - med)))
+    if mad == 0:
+        flagged = bool(np.any(arr != med))
+        score = float(np.max(np.abs(arr - med))) if flagged else 0.0
+        return score, flagged
+    score = float(np.max(0.6745 * np.abs(arr - med) / mad))
+    return score, bool(score > 3.5)

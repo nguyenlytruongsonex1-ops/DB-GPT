@@ -1,0 +1,14 @@
+# Custom series for postgres_exporter 0.15. Built-in names are pg_stat_* / pg_locks_count,
+# which do not match the Pigsty rules kept beside this file.
+pg_demo_lock:
+  query: |
+    SELECT COUNT(*)::float8 AS waits
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND wait_event_type = 'Lock'
+      AND pid <> pg_backend_pid()
+  master: true
+  metrics:
+    - waits:
+        usage: GAUGE
+        description: Backends in the exporter database waiting on a lock
