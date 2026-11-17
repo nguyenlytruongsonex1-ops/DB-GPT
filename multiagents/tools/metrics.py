@@ -11,14 +11,16 @@ import json
 with open(args.anomaly_file, 'r') as f:
     anomaly = json.load(f)
     exceptions = {}
+    # A live anomaly may carry no stored exceptions: metric values then come from
+    # Prometheus for the live window instead of the anomaly file.
     if "exceptions" not in anomaly:
-        raise Exception(f"No metric values found for anomaly in the file {args.anomaly_file}!")
-
-    for c in anomaly["exceptions"]:
-        for k, v in anomaly["exceptions"][c].items():
-            if k not in exceptions:
-                exceptions[k] = v
-    anomaly["exceptions"] = exceptions
+        warnings.warn(f"No stored metric values in {args.anomaly_file}; expecting a live Prometheus window")
+    else:
+        for c in anomaly["exceptions"]:
+            for k, v in anomaly["exceptions"][c].items():
+                if k not in exceptions:
+                    exceptions[k] = v
+        anomaly["exceptions"] = exceptions
 
 def update_current_time():
     current_diag_time = time.localtime()
@@ -47,13 +49,13 @@ def get_workload_statistics():
 def get_slow_queries(diag_id):
     with open(args.anomaly_file, 'r') as f:
         info = json.load(f)
-    return info["slow_queries"]
+    return info.get("slow_queries", [])
 
 
 def get_workload_sqls(diag_id):
     with open(args.anomaly_file, 'r') as f:
         info = json.load(f)
-    return info["workload"]
+    return info.get("workload", {})
 
 
 # [functions]
