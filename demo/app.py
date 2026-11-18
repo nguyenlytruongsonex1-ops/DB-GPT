@@ -1,7 +1,9 @@
 """Trang demo D-Bot: chọn kịch bản -> chạy run_diagnose.py -> xem tiến độ + kết quả."""
-import ast, glob, json, os, re, shlex, signal, subprocess, threading, time
+import ast, glob, json, os, re, shlex, signal, subprocess, sys, threading, time
+import urllib.error
+import urllib.request
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SAVE = os.path.join(ROOT, "demo_results")
@@ -40,7 +42,9 @@ def case_info(n):
     a = d["alerts"][0]["alerts"][0]
     return {"id": n, "title": CASES[n][0], "desc": CASES[n][1], "alert": a["labels"]["alertname"],
             "alert_desc": a["annotations"]["description"].strip(), "labels": d["labels"],
-            "has_replay": os.path.exists(os.path.join(SAVE, f"case_{n}.json"))}
+            "has_replay": os.path.exists(os.path.join(SAVE, f"case_{n}.json")),
+            "live_workload": False,
+            "note": "Phát lại JSON lịch sử. Ca này chưa sinh tải SQL sống."}
 
 
 def enrich(res):
@@ -208,6 +212,94 @@ def stop():
     except subprocess.TimeoutExpired: os.killpg(p.pid, signal.SIGKILL)
     except ProcessLookupError: pass
     return {"ok": True}
+
+
+def _proxy(method, path, timeout=20):
+    url = os.environ.get("WEBHOOK_URL", "http://python_app:8023").rstrip("/") + path
+    req = urllib.request.Request(url, data=b"" if method == "POST" else None, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode()), resp.status
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode()
+        try:
+            body = json.loads(raw)
+        except Exception:
+            body = {"ok": False, "error": raw[:200]}
+        return body, exc.code
+    except Exception as exc:
+        return {"ready": False, "ok": False, "error": exc.__class__.__name__}, 503
+
+
+@app.get("/api/live/status")
+def live_status():
+    body, code = _proxy("GET", "/live/status")
+    return JSONResponse(body, status_code=code)
+
+
+@app.post("/api/live/start")
+def live_start():
+    body, code = _proxy("POST", "/live/start")
+    return JSONResponse(body, status_code=code)
+
+
+@app.post("/api/live/stop")
+def live_stop():
+    body, code = _proxy("POST", "/live/stop")
+    return JSONResponse(body, status_code=code)
+
+
+# Scenario keys for the five demo cases; used by the live workload runner.
+LIVE_CASES = {
+    1: "large_read",
+    2: "bulk_delete",
+    3: "many_indexes",
+    4: "concurrent_writes",
+    5: "slow_join",
+}
+live = {"running": False, "case": None, "scenario": None, "proc": None, "log": [], "trace": None, "error": None}
+
+
+def live_worker(n: int, scenario: str, diagnose: bool):
+    live.update(running=True, case=n, scenario=scenario, error=None, trace=None, log=[])
+    args = [sys.executable, "-m", "live_scenarios.runner", "--scenario", scenario, "--hold-seconds", "45"]
+    if diagnose:
+        args.append("--diagnose")
+    p = subprocess.Popen(args, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         text=True, errors="replace", start_new_session=True)
+    live["proc"] = p
+    for line in p.stdout:
+        live["log"].append(line.rstrip()[:400])
+        del live["log"][:-LOGN]
+    p.wait()
+    live["proc"] = None
+    live["running"] = False
+    trace = os.path.join(ROOT, "alert_results", "live_scenarios", f"{scenario}.json")
+    if p.returncode == 0 and os.path.exists(trace):
+        live["trace"] = json.load(open(trace))
+    elif not live.get("error"):
+        live["error"] = f"live run failed (exit {p.returncode})"
+
+
+@app.get("/api/live/scenarios")
+def live_scenarios():
+    return [{"case": n, "scenario": key} for n, key in LIVE_CASES.items()]
+
+
+@app.post("/api/live/run/{n}")
+def live_run(n: int, diagnose: bool = True):
+    if n not in LIVE_CASES:
+        raise HTTPException(404)
+    with lock:
+        if live["running"]:
+            raise HTTPException(409, "Một lượt chạy live đang diễn ra")
+    threading.Thread(target=live_worker, args=(n, LIVE_CASES[n], diagnose), daemon=True).start()
+    return {"ok": True, "case": n, "scenario": LIVE_CASES[n], "mode": "live"}
+
+
+@app.get("/api/live/run/state")
+def live_run_state():
+    return {k: v for k, v in live.items() if k != "proc"}
 
 
 @app.get("/api/log")

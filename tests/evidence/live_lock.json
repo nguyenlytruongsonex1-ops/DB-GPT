@@ -1,0 +1,41 @@
+{
+ "docker": false,
+ "phases": {
+  "ready": 1794016110.8695002,
+  "baseline": 1794016117.8793485,
+  "holding": 1794016117.9136577,
+  "webhook_firing": 1794016145.0325933,
+  "metric_cleared": 1794016148.1432354,
+  "webhook_resolved": 1794016156.239758
+ },
+ "started_at": 1794016108.2757425,
+ "postgres": "postgres (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+ "baseline_metric": 0.0,
+ "alert_states": [
+  "pending",
+  "firing"
+ ],
+ "metric_while_holding": 1.0,
+ "firing": {
+  "alertname": "DemoLockContention",
+  "sample_count": 6,
+  "max_value": 1.0,
+  "first_ts": 1794016119.66,
+  "diagnosis_mode": "disabled",
+  "diagnosis_called": false,
+  "lock_wait_count": 2
+ },
+ "exporter_lines": [
+  "pg_demo_lock_waits{server=\"127.0.0.1:54329\"} 0"
+ ],
+ "backends_after_stop": 0,
+ "ok": true,
+ "versions": {
+  "prometheus": "2.53.2",
+  "alertmanager": "0.27.0",
+  "postgres_exporter": "0.15.0",
+  "postgres": "postgres (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+  "compose_postgres_image": "postgres:12"
+ },
+ "note": "Native linux/amd64 binaries of the compose versions. Postgres server is 16, not the compose image postgres:12. Docker was not used."
+}

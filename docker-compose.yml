@@ -1,28 +1,36 @@
-# D-Bot local: app + PostgreSQL 12 + Prometheus/Alertmanager + exporters (arm64 OK)
+# D-Bot local: app + PostgreSQL + Prometheus/Alertmanager + exporters.
+# Images are multi-arch (linux/amd64 and linux/arm64): Mac M4 and Windows Docker Desktop.
+# Live proof is pg_demo_lock_waits from postgres_exporter, not host CPU.
 services:
   postgres_db:
     image: postgres:12
     environment:
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: Test123_456
-      POSTGRES_DB: sysbench
+      POSTGRES_USER: ${POSTGRES_USER:-test}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test}
+      POSTGRES_DB: ${POSTGRES_DB:-sysbench}
     command: >
       postgres -c shared_preload_libraries=pg_stat_statements
       -c pg_stat_statements.track=all -c log_min_duration_statement=1000
     volumes:
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./docker/init_demo_live.sh:/docker-entrypoint-initdb.d/02_demo_live.sh:ro
     ports: ["5432:5432"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U test -d sysbench"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-test} -d ${POSTGRES_DB:-sysbench}"]
       interval: 5s
       retries: 20
 
   prometheus:
     image: prom/prometheus:v2.53.2
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
     volumes:
       - ./prometheus_service_docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./prometheus_service_docker/node_rules.yml:/usr/local/prometheus/rules/node_rules.yml:ro
-      - ./prometheus_service_docker/pgsql_rules.yml:/usr/local/prometheus/rules/pgsql_rules.yml:ro
+      - ./prometheus_service_docker/demo_rules.yml:/etc/prometheus/demo_rules.yml:ro
     ports: ["9090:9090"]
 
   alertmanager:
@@ -38,9 +46,15 @@ services:
   pg_exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
     environment:
-      DATA_SOURCE_NAME: postgresql://test:Test123_456@postgres_db:5432/sysbench?sslmode=disable
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-test}:${POSTGRES_PASSWORD:-test}@postgres_db:5432/demo_live?sslmode=disable
+    command:
+      - --extend.query-path=/etc/postgres_exporter/demo_queries.yaml
+    volumes:
+      - ./prometheus_service_docker/demo_queries.yaml:/etc/postgres_exporter/demo_queries.yaml:ro
     ports: ["9187:9187"]
-    depends_on: [postgres_db]
+    depends_on:
+      postgres_db:
+        condition: service_healthy
 
   dbot:
     build:
@@ -51,27 +65,28 @@ services:
       OPENAI_BASE_URL: https://openrouter.ai/api/v1
       PG_HOST: postgres_db
       PG_PORT: "5432"
-      PG_USER: test
-      PG_PASSWORD: Test123_456
-      PG_DB: sysbench
+      PG_USER: ${POSTGRES_USER:-test}
+      PG_PASSWORD: ${POSTGRES_PASSWORD:-test}
+      PG_DB: ${POSTGRES_DB:-sysbench}
     volumes:
       - ./alert_results:/app/alert_results
     depends_on:
       postgres_db:
         condition: service_healthy
 
-  demo:   # trang demo web: http://localhost:8080
+  demo:
     build:
       context: .
       dockerfile: docker/Dockerfile
     env_file: .env
     environment:
       OPENAI_BASE_URL: https://openrouter.ai/api/v1
+      WEBHOOK_URL: http://python_app:8023
       PG_HOST: postgres_db
       PG_PORT: "5432"
-      PG_USER: test
-      PG_PASSWORD: Test123_456
-      PG_DB: sysbench
+      PG_USER: ${POSTGRES_USER:-test}
+      PG_PASSWORD: ${POSTGRES_PASSWORD:-test}
+      PG_DB: ${POSTGRES_DB:-sysbench}
     command: ["uvicorn", "demo.app:app", "--host", "0.0.0.0", "--port", "8080"]
     volumes:
       - ./alert_results:/app/alert_results
@@ -82,12 +97,41 @@ services:
       postgres_db:
         condition: service_healthy
 
-  python_app:   # nhận webhook từ alertmanager, ghi file chẩn đoán
+  python_app:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.live
     working_dir: /app
     entrypoint: []
     command: ["python", "prometheus_service_docker/app.py"]
-    environment: { PYTHONPATH: /app }
+    environment:
+      PYTHONPATH: /app
+      PROMETHEUS_URL: http://prometheus:9090
+      ALERTMANAGER_URL: http://alertmanager:9093
+      EXPORTER_URL: http://pg_exporter:9187/metrics
+      PGHOST: postgres_db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-test}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-test}
+      PGDATABASE: demo_live
+      DEMO_LLM_ENABLED: ${DEMO_LLM_ENABLED:-false}
+      DEMO_LLM_MODEL: qwen/qwen3-30b-a3b-instruct-2507
+      DEMO_LLM_MAX_TOKENS: "400"
+      DEMO_LLM_TIMEOUT_S: "25"
+      OPENAI_BASE_URL: https://openrouter.ai/api/v1
+      ARTIFACT_DIR: /app/alert_results/live
+      GEN_DIAG_DIR: /app/gen_diagnostic_files
+      LOCK_HOLD_SECONDS: "50"
+    volumes:
+      - ./alert_results:/app/alert_results
+      - ./gen_diagnostic_files:/app/gen_diagnostic_files
+      - ./prometheus_service_docker:/app/prometheus_service_docker:ro
     ports: ["8023:8023"]
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8023/test', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

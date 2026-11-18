@@ -1,0 +1,69 @@
+groups:
+  - name: demo_live
+    interval: 5s
+    rules:
+      - alert: DemoLockContention
+        expr: pg_demo_lock_waits > 0
+        for: 15s
+        labels:
+          severity: warning
+          scenario: lock_contention
+          metric: pg_demo_lock_waits
+        annotations:
+          summary: "LIVE demo_lock: a session is waiting on a row lock"
+          description: "pg_demo_lock_waits={{ $value }}. Only schema demo_lock in database demo_live."
+
+      - alert: DemoLargeRead
+        expr: pg_demo_large_read_queries > 0
+        for: 15s
+        labels:
+          severity: warning
+          scenario: large_read
+          metric: pg_demo_large_read_queries
+        annotations:
+          summary: "LIVE scenario: long nested read on demo_live_scenario.big_fact"
+          description: "{{ $value }} statement(s) over big_fact have been running longer than 3s."
+
+      - alert: DemoBulkDelete
+        expr: pg_demo_bulk_delete_dead_tuples > 100000
+        for: 15s
+        labels:
+          severity: warning
+          scenario: bulk_delete
+          metric: pg_demo_bulk_delete_dead_tuples
+        annotations:
+          summary: "LIVE scenario: dead tuples rising after committed batch deletes"
+          description: "pg_demo_bulk_delete_dead_tuples={{ $value }} on demo_live_scenario.purge_target."
+
+      - alert: DemoTooManyIndexes
+        expr: pg_demo_many_indexes_count > 12
+        for: 15s
+        labels:
+          severity: warning
+          scenario: many_indexes
+          metric: pg_demo_many_indexes_count
+        annotations:
+          summary: "LIVE scenario: too many indexes on the scenario table"
+          description: "pg_demo_many_indexes_count={{ $value }} in schema demo_live_scenario."
+
+      - alert: DemoConcurrentWrites
+        expr: pg_demo_concurrent_writes_writers > 4
+        for: 15s
+        labels:
+          severity: warning
+          scenario: concurrent_writes
+          metric: pg_demo_concurrent_writes_writers
+        annotations:
+          summary: "LIVE scenario: concurrent write sessions on one row range"
+          description: "pg_demo_concurrent_writes_writers={{ $value }} on demo_live_scenario.write_hot."
+
+      - alert: DemoSlowJoin
+        expr: pg_demo_slow_join_queries > 0
+        for: 20s
+        labels:
+          severity: warning
+          scenario: slow_join
+          metric: pg_demo_slow_join_queries
+        annotations:
+          summary: "LIVE scenario: slow unindexed join with parallel sessions"
+          description: "{{ $value }} join statement(s) have been running longer than 3s."

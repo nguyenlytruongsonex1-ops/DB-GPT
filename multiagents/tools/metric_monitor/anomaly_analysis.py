@@ -1,10 +1,15 @@
 from configs import DIAGNOSTIC_RESULTS_PATH
 from multiagents.tools.metric_monitor.anomaly_detection import detect_anomalies
-from prometheus_service_docker.prometheus_abnormal_metric import prometheus_metrics
+from prometheus_service_docker.prometheus_abnormal_metric import (
+    prometheus_metrics,
+    obtain_values_of_metrics as prom_range_values,
+)
 from multiagents.tools.metrics import *
 from multiagents.utils.markdown_format import generate_prometheus_chart_content
 # bge-small + chroma L2: khoảng cách tài liệu liên quan ~0.37-0.55, ngưỡng gốc 0.4 loại gần hết
+import logging
 import os
+import time
 KB_SCORE_THRESHOLD = float(os.environ.get("KB_SCORE_THRESHOLD", "0.55"))
 from server.knowledge_base.kb_doc_api import search_docs, fetch_expert_kb_names
 from multiagents.initialization import LANGUAGE
@@ -29,26 +34,34 @@ def metric_analysis_results(agent_name, kb_name, alert_metric, diag_id, enable_p
     # system metric names
     metrics_list = prometheus_metrics[f"{metric_prefix}_metrics"]
 
-    # if enable_prometheus == True:
-    #     detailed_alert_metric = obtain_values_of_metrics(-1,
-    #         alert_metric_list, int(start_time), int(end_time))
+    def _live_window(start_time, end_time):
+        try:
+            start_s, end_s = float(start_time), float(end_time)
+        except (TypeError, ValueError):
+            return False
+        now = time.time()
+        return start_s >= now - 2 * 86400 and end_s >= now - 2 * 86400 and end_s >= start_s
 
-    #     detailed_metrics = obtain_values_of_metrics(-1,
-    #         metrics_list, int(start_time), int(end_time))
-    # else:
-
-    # read alert and metrics from the anomaly file
-    detailed_alert_metric = obtain_values_of_metrics(diag_id,
-        alert_metric_list, -1, 1)
-    detailed_metrics = obtain_values_of_metrics(diag_id,
-        metrics_list, -1, 1)
+    # Historical cases (2023 JSON) always stay on the anomaly file.
+    # A recent window with the flag on reads Prometheus for that window only.
+    if enable_prometheus and _live_window(start_time, end_time):
+        names = [item for item in alert_metric_list if item]
+        detailed_alert_metric = prom_range_values(int(float(start_time)), int(float(end_time)), names)
+        detailed_metrics = prom_range_values(int(float(start_time)), int(float(end_time)), metrics_list)
+    else:
+        if enable_prometheus:
+            logging.info("enable_prometheus set but the window is not live; reading the anomaly file")
+        detailed_alert_metric = obtain_values_of_metrics(diag_id,
+            alert_metric_list, -1, 1)
+        detailed_metrics = obtain_values_of_metrics(diag_id,
+            metrics_list, -1, 1)
 
     # identify the abnormal metrics
     top5_abnormal_metrics = {}
     top5_abnormal_metrics_map = {}
     for metric_name, metric_values in detailed_metrics.items():
         anomaly_value, is_abnormal = detect_anomalies(np.array(metric_values))
-        if is_abnormal:
+        if bool(is_abnormal):
             # maintain the top 5 abnormal metrics
             if len(top5_abnormal_metrics) < 5:
                 top5_abnormal_metrics[metric_name] = processed_values(metric_values, language=LANGUAGE)

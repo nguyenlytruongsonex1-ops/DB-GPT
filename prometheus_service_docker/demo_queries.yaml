@@ -1,0 +1,100 @@
+# Custom series for postgres_exporter 0.15, used by the live D-Bot scenarios.
+# postgres_exporter exports the composed name <query_name>_<metric_column>, so the
+# names below are chosen to give readable, unique series.
+# Each metric is scoped to one scenario schema/table so alerts do not cross-fire
+# when scenarios are run one at a time.
+pg_demo_lock:
+  query: |
+    SELECT COUNT(*)::float8 AS waits
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND wait_event_type = 'Lock'
+      AND pid <> pg_backend_pid()
+  master: true
+  metrics:
+    - waits:
+        usage: GAUGE
+        description: Backends in the exporter database waiting on a lock
+
+pg_demo_long_running:
+  query: |
+    SELECT COUNT(*)::float8 AS queries
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND pid <> pg_backend_pid()
+      AND now() - query_start > interval '3 seconds'
+  master: true
+  metrics:
+    - queries:
+        usage: GAUGE
+        description: Active statements running longer than 3 seconds
+
+pg_demo_large_read:
+  query: |
+    SELECT COUNT(*)::float8 AS queries
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND pid <> pg_backend_pid()
+      AND query LIKE '%demo_live_scenario.big_fact%'
+      AND now() - query_start > interval '3 seconds'
+  master: true
+  metrics:
+    - queries:
+        usage: GAUGE
+        description: Long-running reads over the large_read scenario table
+
+pg_demo_slow_join:
+  query: |
+    SELECT COUNT(*)::float8 AS queries
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND pid <> pg_backend_pid()
+      AND query LIKE '%demo_live_scenario.join_left%'
+      AND now() - query_start > interval '3 seconds'
+  master: true
+  metrics:
+    - queries:
+        usage: GAUGE
+        description: Long-running joins over the slow_join scenario tables
+
+pg_demo_bulk_delete:
+  query: |
+    SELECT COALESCE(SUM(n_dead_tup), 0)::float8 AS dead_tuples
+    FROM pg_stat_user_tables
+    WHERE schemaname = 'demo_live_scenario'
+      AND relname = 'purge_target'
+  master: true
+  metrics:
+    - dead_tuples:
+        usage: GAUGE
+        description: Dead tuples accumulated by the bulk_delete scenario
+
+pg_demo_many_indexes:
+  query: |
+    SELECT COUNT(*)::float8 AS count
+    FROM pg_index i
+    JOIN pg_class c ON c.oid = i.indrelid
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'demo_live_scenario'
+  master: true
+  metrics:
+    - count:
+        usage: GAUGE
+        description: Indexes created by the many_indexes scenario
+
+pg_demo_concurrent_writes:
+  query: |
+    SELECT COUNT(*)::float8 AS writers
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND state = 'active'
+      AND pid <> pg_backend_pid()
+      AND application_name = 'demo_live_scenario'
+  master: true
+  metrics:
+    - writers:
+        usage: GAUGE
+        description: Active scenario sessions issuing writes (application_name tagged)

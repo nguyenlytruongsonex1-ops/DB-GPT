@@ -1,0 +1,7 @@
+FROM python:3.10-slim
+WORKDIR /app
+RUN pip install --no-cache-dir fastapi uvicorn psycopg2-binary
+COPY prometheus_service_docker /app/prometheus_service_docker
+ENV PYTHONPATH=/app DEMO_LLM_ENABLED=false
+EXPOSE 8023
+CMD ["python", "prometheus_service_docker/app.py"]

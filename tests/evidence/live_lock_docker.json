@@ -1,0 +1,29 @@
+{
+ "docker": true,
+ "phases": {
+  "ready": 1794016710.9635756,
+  "baseline": 1794016710.9659045,
+  "holding": 1794016711.0063076,
+  "webhook_firing": 1794016736.1410801,
+  "webhook_resolved": 1794016746.3657115
+ },
+ "started_at": 1794016710.936165,
+ "baseline_metric": 0.0,
+ "alert_states": [
+  "pending",
+  "firing"
+ ],
+ "metric_while_holding": 1.0,
+ "exporter_while_holding": [
+  "pg_demo_lock_waits{server=\"postgres_db:5432\"} 1"
+ ],
+ "firing": {
+  "alertname": "DemoLockContention",
+  "sample_count": 6,
+  "max_value": 1.0,
+  "diagnosis_mode": "disabled",
+  "diagnosis_called": false
+ },
+ "ok": true,
+ "note": "docker compose on this amd64 sandbox. Mac M4 arm64 was not executed. The sandbox iptables-legacy FORWARD policy dropped the compose bridge until one local ACCEPT was added; that firewall change is not in the repo."
+}

@@ -39,7 +39,7 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
 
 | Service | Cổng | Vai trò | Cách dùng |
 |---|---|---|---|
-| `postgres_db` | 5432 | PostgreSQL 12 cần chẩn đoán, có bật `pg_stat_statements` | Kết nối bằng `psql -h localhost -U test sysbench`, mật khẩu `Test123_456` |
+| `postgres_db` | 5432 | PostgreSQL 12, `pg_stat_statements`, thêm database `demo_live` cho ca LIVE | User `test`. Mật khẩu lấy từ `POSTGRES_PASSWORD`, mặc định `test` chỉ cho demo local |
 | `node_exporter` | 9100 | Đo CPU, RAM, IO, load của máy | http://localhost:9100/metrics |
 | `pg_exporter` | 9187 | Đo số liệu của DB: kết nối, lock, query… | http://localhost:9187/metrics |
 | `prometheus` | 9090 | Thu metric từ 2 exporter, áp luật cảnh báo | http://localhost:9090: mục Graph để vẽ metric, Status → Targets để kiểm tra exporter, Alerts để xem cảnh báo |
@@ -50,7 +50,7 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
 
 **Các ca mẫu:** từ `test_cases/testing_cases_1.json` đến `testing_cases_5.json`. Mỗi file là một ca bất thường đã có sẵn metric.
 
-**Luật cảnh báo:** `prometheus_service_docker/node_rules.yml` và `pgsql_rules.yml`.
+**Luật cảnh báo LIVE:** `prometheus_service_docker/demo_rules.yml` trên metric `pg_demo_lock_waits` của postgres_exporter 0.15. `node_rules.yml` và `pgsql_rules.yml` là luật Pigsty (`pg_db_*`, `node_up`), giữ trong repo nhưng không được mount vì không có series.
 
 ## Chạy kịch bản chẩn đoán
 
@@ -94,9 +94,13 @@ python3 -c "import json;print(json.load(open('test_cases/testing_cases_3.json'))
 
 Mở **http://localhost:8080** sau khi `docker compose up -d` (service `demo`).
 
-1. Chọn 1 trong 5 kịch bản sự cố (tick **Hiện đáp án** để xem nguyên nhân thật).
-2. **Chạy chẩn đoán thật**: gọi OpenRouter, khoảng 3–4 phút, có thanh tiến độ và nhật ký từng bước (chuyên gia nào, dùng công cụ gì, số lần gọi LLM). Mỗi lúc chỉ chạy 1 lượt.
-3. **Chế độ xem lại**: hiện ngay kết quả đã lưu trong `demo_results/`, không cần chờ, không cần key. Mỗi lần chạy thật thành công sẽ ghi đè kết quả lưu. Bản xem lại hiện dùng `qwen/qwen3-30b-a3b-instruct-2507`; các bản so sánh nằm trong `demo_results/<model>/`. Ngưỡng tra tri thức: biến `KB_SCORE_THRESHOLD` (mặc định 0.55).
+**LIVE — tranh chấp khóa.** Nút này giữ một khóa dòng trên `demo_live.demo_lock.ticket` trong khoảng 50 giây, rồi tự nhả. Exporter xuất `pg_demo_lock_waits`. Prometheus chuyển cảnh báo `DemoLockContention` từ pending sang firing. Alertmanager gửi webhook tới `python_app`, webhook đọc cửa sổ metric vừa xảy ra (không đọc file 2023) và ghi `alert_results/live/`. Cổng LLM mặc định tắt (`DEMO_LLM_ENABLED=false`). Webhook không đọc `OPENAI_API_KEY`. Một lần gọi model chỉ xảy ra khi cả `DEMO_LLM_ENABLED=true` và `DEMO_LLM_API_KEY` được đặt, model `qwen/qwen3-30b-a3b-instruct-2507`, tối đa 400 token và 25 giây. Khi cổng tắt, giao diện ghi rõ là chưa gọi model và không điền kết luận.
+
+**Phát lại offline — 5 ca.** Các nút này chỉ đọc `test_cases/testing_cases_*.json` và `demo_results/`. Chúng không tạo SQL trên Postgres.
+
+1. Chọn 1 trong 5 kịch bản (tick **Hiện đáp án** để xem nhãn đã lưu).
+2. **Chạy trên file JSON lịch sử**: vẫn là `run_diagnose.py` trên file 2023, khoảng 3–4 phút nếu có key ở service `dbot`/`demo`. Đây không phải tải sống.
+3. **Xem lại kết quả đã lưu**: hiện `demo_results/`, không cần key. Bản xem lại có thể là lần chạy cũ với `qwen/qwen3-30b-a3b-instruct-2507`; các bản so sánh nằm trong `demo_results/<model>/`. Ngưỡng tra tri thức: `KB_SCORE_THRESHOLD` (mặc định 0.55).
 
 Kết quả gồm: đáp án đúng so với kết luận của D-Bot, chuyên gia được chọn, biểu đồ chỉ số bất thường và báo cáo đầy đủ. Mã nguồn: `demo/app.py`, `demo/index.html`.
 
@@ -117,5 +121,6 @@ Sửa `LLM_MODEL` trong `.env`, mặc định là `openai/gpt-4o-mini`, rồi ch
 
 ## Giới hạn
 
-- Các ca mẫu dùng metric có sẵn trong file. Luồng tự động từ cảnh báo thật đến chẩn đoán chưa được nối hoàn chỉnh.
-- Chưa có giao diện web, hiện chỉ chạy qua dòng lệnh.
+- Ca LIVE đã nối là tranh chấp khóa (`pg_demo_lock_waits`). Năm ca JSON chưa có workload sống và được gắn nhãn offline.
+- Chẩn đoán model của ca LIVE không chạy khi cổng trả phí tắt. Không dùng kết quả mock để thay một lần gọi thật.
+- Giao diện web là service `demo` ở cổng 8080. Biểu đồ xem lại của ca cũ vẫn là `topMetrics` đã lưu; biểu đồ LIVE dùng mốc thời gian Prometheus.

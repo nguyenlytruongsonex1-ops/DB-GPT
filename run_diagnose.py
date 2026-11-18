@@ -56,9 +56,10 @@ if __name__ == "__main__":
     args.start_at_seconds = anomaly_json["start_time"]
     args.end_at_seconds = anomaly_json["end_time"]
 
-    slow_queries = []
-    workload_statistics = []
-    workload_sqls = ""
+    # Scenario files and live payloads carry their own evidence; do not drop it.
+    slow_queries = anomaly_json.get("slow_queries", [])
+    workload_statistics = anomaly_json.get("workload_statistics", [])
+    workload_sqls = anomaly_json.get("workload", {})
 
     # if args.enable_slow_query_log == True:
     #     # [slow queries] read from query logs

@@ -1,16 +1,19 @@
+global:
+  resolve_timeout: 30s
 route:
+  receiver: db-gpt
   group_by: ['alertname']
-  group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 1h
-  receiver: 'db-gpt'
+  group_wait: 5s
+  group_interval: 10s
+  repeat_interval: 2m
 receivers:
-  - name: 'db-gpt'
+  - name: db-gpt
     webhook_configs:
-      - url: 'http://python_app:8023/alert'
+      - url: http://python_app:8023/alert
+        send_resolved: true
 inhibit_rules:
-  - source_match:
-      severity: 'critical'
-    target_match:
-      severity: 'warning'
-    equal: ['alertname', 'dev', 'instance']
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal: ['alertname', 'instance']

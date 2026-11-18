@@ -16,6 +16,7 @@ others/customllm_test.py
 alert_results/2023*
 alert_results/logs
 alert_results/
+gen_diagnostic_files/
 configs/*.py
 chromadb_search_results.txt
 knowledge_base/info.db
