@@ -20,6 +20,22 @@ docker compose up -d --build
 docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testing_cases_1.json
 ```
 
+Để chạy **LIVE + pipeline D-Bot** trên cả 5 kịch bản, đặt thêm `DEMO_LLM_ENABLED=true` và `DEMO_LLM_API_KEY=<OpenRouter key>` trong `.env`. Đây là key riêng cho LIVE; runner chỉ chuyển nó vào tiến trình D-Bot của lượt chạy, không thay `OPENAI_API_KEY` của các luồng khác. Nhánh webhook giữ LLM tắt để mỗi ca chỉ gọi pipeline đầy đủ một lần. Model LIVE lấy từ `DEMO_LLM_MODEL`.
+
+### Kết quả kiểm chứng LIVE có LLM
+
+Trên Mac mini ngày 18/11/2026, cả năm kịch bản hoàn tất luồng **workload PostgreSQL thật → metric Prometheus → alert → webhook → pipeline D-Bot → báo cáo → cleanup**. Lượt này dùng model `qwen/qwen3-30b-a3b-instruct-2507`; số request thay đổi theo số bước chuyên gia.
+
+| Kịch bản | Request model | Kết luận chính trong báo cáo | Trạng thái |
+|---|---:|---|---|
+| `concurrent_writes` | 39 | Ghi đồng thời gây tranh chấp khóa và tăng thời gian chờ | Đạt |
+| `large_read` | 40 | Truy vấn `LIKE` có wildcard đầu dẫn tới quét bảng lớn | Đạt |
+| `bulk_delete` | 35 | Xoá hàng loạt làm tăng dead tuples và chi phí truy vấn | Đạt |
+| `many_indexes` | 39 | 24 index làm tăng chi phí lưu trữ và thao tác ghi | Đạt |
+| `slow_join` | 35 | Join không có index phù hợp gây quét bảng và tải CPU | Đạt |
+
+Mỗi ca đều có alert firing, webhook được nhận, báo cáo được lưu và cleanup thành công. Nhãn chuẩn chỉ nằm trong trace để đối chiếu, không được đưa vào anomaly gửi cho D-Bot. Đây là một lượt kiểm chứng tích hợp; số liệu này chưa phải đánh giá độ chính xác thống kê qua nhiều lần chạy.
+
 ## Hướng dẫn từng bước cho người mới
 
 1. **Cài Docker Desktop** rồi mở app lên. Đợi đến khi biểu tượng cá voi báo "running".
@@ -28,7 +44,7 @@ docker compose exec dbot python run_diagnose.py --anomaly_file test_cases/testin
    ```bash
    git clone https://github.com/nguyenlytruongsonex1-ops/DB-GPT.git && cd DB-GPT
    ```
-4. **Tạo file `.env`:** chạy `cp .env.example .env`, mở file ra và thay `sk-or-xxxx` bằng key của bạn. Không commit file này lên git.
+4. **Tạo file `.env`:** chạy `cp .env.example .env`, điền key OpenRouter cho `OPENAI_API_KEY`. Nếu muốn kiểm thử đủ luồng LIVE có D-Bot, bật `DEMO_LLM_ENABLED=true` và điền key ở `DEMO_LLM_API_KEY`. Không commit file này lên git.
 5. **Build và chạy:** `docker compose up -d --build`. Lần đầu mất khoảng 10 đến 20 phút.
 6. **Kiểm tra:** `docker compose ps`. Cả 8 service đều phải ở trạng thái `Up`.
 7. **Chẩn đoán thử:** chạy lệnh thứ 3 ở mục trên, mất khoảng 3 đến 4 phút. Thấy dòng `Diagnose Finished!` là xong.
@@ -94,7 +110,9 @@ python3 -c "import json;print(json.load(open('test_cases/testing_cases_3.json'))
 
 Mở **http://localhost:8080** sau khi `docker compose up -d` (service `demo`).
 
-**LIVE — tranh chấp khóa.** Nút này giữ một khóa dòng trên `demo_live.demo_lock.ticket` trong khoảng 50 giây, rồi tự nhả. Exporter xuất `pg_demo_lock_waits`. Prometheus chuyển cảnh báo `DemoLockContention` từ pending sang firing. Alertmanager gửi webhook tới `python_app`, webhook đọc cửa sổ metric vừa xảy ra (không đọc file 2023) và ghi `alert_results/live/`. Cổng LLM mặc định tắt (`DEMO_LLM_ENABLED=false`). Webhook không đọc `OPENAI_API_KEY`. Một lần gọi model chỉ xảy ra khi cả `DEMO_LLM_ENABLED=true` và `DEMO_LLM_API_KEY` được đặt, model `qwen/qwen3-30b-a3b-instruct-2507`, tối đa 400 token và 25 giây. Khi cổng tắt, giao diện ghi rõ là chưa gọi model và không điền kết luận.
+**LIVE — 5 kịch bản PostgreSQL thật.** Chọn một ca LIVE để tạo workload, chờ metric và cảnh báo Prometheus, rồi chạy pipeline `run_diagnose.py` trên cửa sổ thời gian vừa quan sát. Kết quả được ghi theo từng lượt trong `alert_results/live_scenarios/`, không dùng JSON lịch sử. Đáp án chuẩn chỉ dùng để đối chiếu sau lượt chạy, không gửi vào đầu vào của LLM. Pipeline dùng `OPENAI_API_KEY` và `LLM_MODEL` trong `.env`.
+
+**LLM của webhook** là nhánh gọi trực tiếp riêng, không thay thế pipeline D-Bot. Mặc định nhánh này tắt. Muốn bật, đặt `DEMO_LLM_ENABLED=true` và `DEMO_LLM_API_KEY` trong `.env`, rồi khởi động lại Compose. Nhánh này dùng tối đa 400 token và timeout 25 giây; không bật cùng lúc khi đang xác minh pipeline D-Bot để tránh gọi model hai lần cho một cảnh báo.
 
 **Phát lại offline — 5 ca.** Các nút này chỉ đọc `test_cases/testing_cases_*.json` và `demo_results/`. Chúng không tạo SQL trên Postgres.
 
@@ -121,6 +139,6 @@ Sửa `LLM_MODEL` trong `.env`, mặc định là `openai/gpt-4o-mini`, rồi ch
 
 ## Giới hạn
 
-- Ca LIVE đã nối là tranh chấp khóa (`pg_demo_lock_waits`). Năm ca JSON chưa có workload sống và được gắn nhãn offline.
-- Chẩn đoán model của ca LIVE không chạy khi cổng trả phí tắt. Không dùng kết quả mock để thay một lần gọi thật.
+- Năm ca LIVE tạo workload thật; mỗi lần chạy phải ghi rõ trạng thái metric, cảnh báo, LLM và cleanup. Nếu model lỗi hoặc không tạo báo cáo thì lượt đó không được tính là E2E thành công.
+- Webhook LLM và pipeline D-Bot là hai nhánh riêng; chỉ bật một nhánh khi đo chi phí/chất lượng một lượt chạy.
 - Giao diện web là service `demo` ở cổng 8080. Biểu đồ xem lại của ca cũ vẫn là `topMetrics` đã lưu; biểu đồ LIVE dùng mốc thời gian Prometheus.

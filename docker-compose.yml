@@ -82,11 +82,20 @@ services:
     environment:
       OPENAI_BASE_URL: https://openrouter.ai/api/v1
       WEBHOOK_URL: http://python_app:8023
+      # The dashboard uses this dedicated credential only for the LIVE D-Bot child process.
+      DEMO_LLM_ENABLED: ${DEMO_LLM_ENABLED:-false}
+      DEMO_LLM_API_KEY: ${DEMO_LLM_API_KEY:-}
+      DEMO_LLM_MODEL: ${DEMO_LLM_MODEL:-qwen/qwen3-30b-a3b-instruct-2507}
       PG_HOST: postgres_db
       PG_PORT: "5432"
       PG_USER: ${POSTGRES_USER:-test}
       PG_PASSWORD: ${POSTGRES_PASSWORD:-test}
       PG_DB: ${POSTGRES_DB:-sysbench}
+      PGHOST: postgres_db
+      PGPORT: "5432"
+      PGUSER: ${POSTGRES_USER:-test}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-test}
+      PGDATABASE: demo_live
     command: ["uvicorn", "demo.app:app", "--host", "0.0.0.0", "--port", "8080"]
     volumes:
       - ./alert_results:/app/alert_results
@@ -114,7 +123,8 @@ services:
       PGUSER: ${POSTGRES_USER:-test}
       PGPASSWORD: ${POSTGRES_PASSWORD:-test}
       PGDATABASE: demo_live
-      DEMO_LLM_ENABLED: ${DEMO_LLM_ENABLED:-false}
+      # Keep the webhook's abbreviated diagnosis off; the dashboard runner invokes full D-Bot once.
+      DEMO_LLM_ENABLED: "false"
       DEMO_LLM_MODEL: qwen/qwen3-30b-a3b-instruct-2507
       DEMO_LLM_MAX_TOKENS: "400"
       DEMO_LLM_TIMEOUT_S: "25"

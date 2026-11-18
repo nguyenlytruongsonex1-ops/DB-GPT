@@ -67,13 +67,7 @@ def processed_values(data):
     deviation_value = round(np.std(np.array(data)), 2)
     # evenly sampled 10 values (reserve two decimal places)
     evenly_sampled_values = [
-        round(
-            data[i],
-            2) for i in range(
-            0,
-            len(data),
-            len(data) //
-            10)]
+        round(data[i], 2) for i in range(0, len(data), max(1, len(data) // 10))]
 
     # describe the above five values in a string
     return f"the max value is {max_value}, the min value is {min_value}, the mean value is {mean_value}, the deviation value is {deviation_value}, and the evenly_sampled_values are {evenly_sampled_values}."
