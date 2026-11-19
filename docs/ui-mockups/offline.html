@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D-Bot — Offline replay</title>
+  <link href="bootstrap.min.css" rel="stylesheet"><link href="mockups.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-white border-bottom"><div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3"><div class="d-flex align-items-center gap-3"><div class="brand-mark" aria-hidden="true">DB</div><div><div class="fw-bold fs-5 lh-sm">D-Bot</div><div class="small text-secondary-emphasis">Demo chẩn đoán PostgreSQL E2E</div></div></div><span class="badge text-bg-light border">Bản tĩnh để review</span></div></header>
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot"><div class="nav nav-tabs mb-4" role="tablist"><a class="nav-link" href="index.html" role="tab" aria-selected="false" data-testid="tab-live">LIVE</a><a class="nav-link active" href="offline.html" role="tab" aria-selected="true" aria-current="page" data-testid="tab-offline">Offline</a><a class="nav-link" href="history.html" role="tab" aria-selected="false" data-testid="tab-history">Lịch sử</a></div></nav>
+
+    <section class="surface p-3 p-md-4 mb-4" aria-labelledby="offline-title">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3"><div><div class="eyebrow mb-2">Offline replay</div><h1 id="offline-title" class="h3 mb-2">Phân tích dữ liệu cảnh báo đã lưu</h1><p class="text-secondary-emphasis mb-0">Chế độ này không tạo workload trên PostgreSQL. Chọn một mẫu để xem lại hoặc phân tích.</p></div><span class="badge source-offline align-self-start">Không phải LIVE</span></div>
+    </section>
+
+    <div class="row g-4 align-items-start">
+      <section class="col-lg-5" aria-labelledby="replay-list-title">
+        <div class="surface p-3 p-md-4"><h2 id="replay-list-title" class="h4 mb-3">Dữ liệu mẫu</h2><div class="list-group">
+          <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-start active" type="button" aria-current="true" data-agent-id="offline-concurrent-writes"><span><strong class="d-block">Ghi dữ liệu đồng thời</strong><small>Alert và metric đã lưu</small></span><span class="badge text-bg-light text-dark">04</span></button>
+          <button class="list-group-item list-group-item-action" type="button"><strong class="d-block">Đọc dữ liệu quá lớn</strong><small class="text-secondary-emphasis">Alert và metric đã lưu</small></button>
+          <button class="list-group-item list-group-item-action" type="button"><strong class="d-block">Xóa dữ liệu hàng loạt</strong><small class="text-secondary-emphasis">Alert và metric đã lưu</small></button>
+          <button class="list-group-item list-group-item-action" type="button"><strong class="d-block">Quá nhiều chỉ mục</strong><small class="text-secondary-emphasis">Alert và metric đã lưu</small></button>
+          <button class="list-group-item list-group-item-action" type="button"><strong class="d-block">Join chậm, tranh chấp CPU</strong><small class="text-secondary-emphasis">Alert và metric đã lưu</small></button>
+        </div></div>
+      </section>
+      <section class="col-lg-7" aria-labelledby="replay-summary-title">
+        <div class="surface p-3 p-md-4">
+          <div class="d-flex justify-content-between gap-3 mb-3"><div><div class="eyebrow mb-2">Đang chọn</div><h2 id="replay-summary-title" class="h4 mb-0">Ghi dữ liệu đồng thời</h2></div><span class="badge text-bg-light border align-self-start">concurrent_writes</span></div>
+          <p class="text-secondary-emphasis">Dữ liệu gồm payload cảnh báo, metric và metadata từ một lượt chạy đã lưu. Ground truth chỉ dùng để đối chiếu sau chẩn đoán.</p>
+          <dl class="row small"><dt class="col-4">Nguồn</dt><dd class="col-8">Replay đã lưu</dd><dt class="col-4">Workload mới</dt><dd class="col-8">Không</dd><dt class="col-4">LLM</dt><dd class="col-8">Có thể được gọi khi phân tích lại</dd></dl>
+          <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="button" data-testid="offline-run-button">Phân tích dữ liệu đã lưu</button><button class="btn btn-outline-secondary" type="button">Xem JSON đầu vào</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

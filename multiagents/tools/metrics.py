@@ -20,7 +20,7 @@ with open(args.anomaly_file, 'r') as f:
             for k, v in anomaly["exceptions"][c].items():
                 if k not in exceptions:
                     exceptions[k] = v
-        anomaly["exceptions"] = exceptions
+    anomaly["exceptions"] = exceptions
 
 def update_current_time():
     current_diag_time = time.localtime()
@@ -87,7 +87,7 @@ def processed_values(data, language="en"):
     # deviation
     deviation_value = round(np.std(np.array(data)), 2)
     # evenly sampled 10 values (reserve two decimal places)
-    evenly_sampled_values = [round(data[i], 2) for i in range(0, len(data), len(data) // 10)]
+    evenly_sampled_values = [round(data[i], 2) for i in range(0, len(data), max(1, len(data) // 10))]
 
     # describe the above five values in a string
     if language == "zh":

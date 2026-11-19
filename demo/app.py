@@ -1,5 +1,5 @@
 """Trang demo D-Bot: chọn kịch bản -> chạy run_diagnose.py -> xem tiến độ + kết quả."""
-import ast, glob, json, os, re, shlex, signal, subprocess, sys, threading, time
+import ast, glob, json, os, re, shlex, signal, subprocess, sys, threading, time, uuid
 import urllib.error
 import urllib.request
 from fastapi import FastAPI, HTTPException
@@ -135,6 +135,11 @@ def worker(n, model=None, out=None):
 def index(): return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
 
 
+@app.get("/assets/bootstrap.min.css")
+def bootstrap_css():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "bootstrap.min.css"), media_type="text/css")
+
+
 @app.get("/api/cases")
 def cases(): return [case_info(n) for n in CASES]
 
@@ -144,7 +149,7 @@ def run(n: int, model: str = "", out: str = ""):
     if out and not re.fullmatch(r"[\w.-]+", out): raise HTTPException(400)
     if n not in CASES: raise HTTPException(404)
     with lock:
-        if state.get("running"): raise HTTPException(409, "Đang có một lượt chạy, vui lòng chờ")
+        if state.get("running") or live.get("running"): raise HTTPException(409, "Đang có một lượt chạy, vui lòng chờ")
         state.clear(); state.update(running=True, case=n, start=time.time(), steps=[], llm_calls=0, kb_searches=0, kb_docs=0,
                                     stage="", stage_pct=0, experts=[], result=None, error=None, log=[], log_n=0, knowledge=[], stopped=False)
     threading.Thread(target=worker, args=(n, model or None, out or None), daemon=True).start()
@@ -171,23 +176,51 @@ def replay(n: int):
 def _rel(f): return os.path.relpath(f, ROOT)
 
 
-@app.get("/api/history")
-def history():
-    """Liệt kê mọi kết quả đã lưu: demo_results (có case/model) + alert_results gốc."""
+def history_records():
+    """Build normalized history rows without exposing report payloads."""
     out = []
+    live_result_ids = set()
+    for trace_file in glob.glob(os.path.join(ROOT, "alert_results", "live_scenarios", "*", "*.json")):
+        if trace_file.endswith("_anomaly.json"):
+            continue
+        try:
+            trace = json.load(open(trace_file))
+            result_file = ((trace.get("diagnosis") or {}).get("result_file") or "").strip()
+            if result_file:
+                live_result_ids.add(os.path.normpath(result_file))
+        except Exception:
+            continue
     for f in glob.glob(os.path.join(SAVE, "**", "case_*.json"), recursive=True):
         try: r = json.load(open(f))
         except Exception: continue
         sub = os.path.relpath(os.path.dirname(f), SAVE)
         out.append({"id": _rel(f), "case": r.get("case"), "model": r.get("model") or "", "set": "" if sub == "." else sub,
                     "time": r.get("finished_at"), "elapsed": r.get("elapsed"), "severity": r["record"].get("severity"),
-                    "title": r["record"].get("title", "")})
+                    "title": r["record"].get("title", ""), "source": "OFFLINE", "status": "Hoàn tất"})
     for f in glob.glob(os.path.join(ROOT, "alert_results", "*", "*.jsonl")):
         try: r = json.load(open(f)); t = int(r.get("time") or 0)
         except Exception: continue
+        result_id = os.path.normpath(_rel(f))
         out.append({"id": _rel(f), "case": None, "model": os.path.basename(os.path.dirname(f)), "set": "alert_results",
                     "time": t, "elapsed": None, "severity": r.get("severity"), "title": r.get("title", "")})
+        out[-1].update(source="LIVE" if result_id in live_result_ids else "OFFLINE", status="Hoàn tất")
     return sorted(out, key=lambda x: -(x["time"] or 0))
+
+
+@app.get("/api/history")
+def history(page: int = 1, page_size: int = 25, q: str = ""):
+    """Paginate saved results; history is loaded only when its tab opens."""
+    page = max(1, page)
+    page_size = min(100, max(1, page_size))
+    rows = history_records()
+    query = q.strip().lower()
+    if query:
+        rows = [row for row in rows if query in " ".join(str(row.get(key) or "") for key in
+                ("title", "model", "set", "source", "status")).lower()]
+    total = len(rows)
+    start = (page - 1) * page_size
+    return {"items": rows[start:start + page_size], "total": total, "page": page,
+            "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
 
 
 @app.get("/api/result")
@@ -257,27 +290,44 @@ LIVE_CASES = {
     4: "concurrent_writes",
     5: "slow_join",
 }
-live = {"running": False, "case": None, "scenario": None, "proc": None, "log": [], "trace": None, "error": None}
+live = {"running": False, "case": None, "scenario": None, "run_id": None, "proc": None,
+        "log": [], "trace": None, "error": None, "llm_expected": True}
 
 
-def live_worker(n: int, scenario: str, diagnose: bool):
-    live.update(running=True, case=n, scenario=scenario, error=None, trace=None, log=[])
-    args = [sys.executable, "-m", "live_scenarios.runner", "--scenario", scenario, "--hold-seconds", "45"]
+def _redact_live_log(line: str) -> str:
+    line = re.sub(r"(?i)(bearer\s+)[A-Za-z0-9._-]+", r"\1[redacted]", line)
+    line = re.sub(r"(?i)sk-[A-Za-z0-9._-]{8,}", "sk-[redacted]", line)
+    return line[:400]
+
+
+def live_worker(n: int, scenario: str, diagnose: bool, run_id: str):
+    out_dir = os.path.join(ROOT, "alert_results", "live_scenarios", run_id)
+    live.update(running=True, case=n, scenario=scenario, run_id=run_id, error=None,
+                trace=None, log=[], llm_expected=diagnose)
+    args = [sys.executable, "-m", "live_scenarios.runner", "--scenario", scenario,
+            "--hold-seconds", "45", "--out-dir", out_dir]
     if diagnose:
-        args.append("--diagnose")
+        args.extend(["--diagnose", "--allow-llm"])
     p = subprocess.Popen(args, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                          text=True, errors="replace", start_new_session=True)
     live["proc"] = p
     for line in p.stdout:
-        live["log"].append(line.rstrip()[:400])
+        clean_line = _redact_live_log(line.rstrip())
+        live["log"].append(clean_line)
         del live["log"][:-LOGN]
+        if " 401 Unauthorized" in clean_line or "HTTP/1.1\" 401" in clean_line:
+            live["error"] = "LLM provider từ chối xác thực (HTTP 401); kiểm tra DEMO_LLM_API_KEY trong .env."
+            try:
+                os.killpg(p.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
     p.wait()
     live["proc"] = None
     live["running"] = False
-    trace = os.path.join(ROOT, "alert_results", "live_scenarios", f"{scenario}.json")
-    if p.returncode == 0 and os.path.exists(trace):
-        live["trace"] = json.load(open(trace))
-    elif not live.get("error"):
+    trace_path = os.path.join(out_dir, f"{scenario}.json")
+    if os.path.exists(trace_path):
+        live["trace"] = json.load(open(trace_path))
+    if p.returncode != 0 and not live.get("error"):
         live["error"] = f"live run failed (exit {p.returncode})"
 
 
@@ -286,15 +336,48 @@ def live_scenarios():
     return [{"case": n, "scenario": key} for n, key in LIVE_CASES.items()]
 
 
+@app.get("/api/live/run/config")
+def live_run_config():
+    enabled = os.environ.get("DEMO_LLM_ENABLED", "false").strip().lower() in {"1", "true", "yes", "y", "on"}
+    ready = enabled and bool(os.environ.get("DEMO_LLM_API_KEY", "").strip())
+    scenarios = []
+    for n, key in LIVE_CASES.items():
+        info = case_info(n)
+        scenarios.append({"case": n, "scenario": key, "title": info["title"], "desc": info["desc"],
+                          "alert": info["alert"], "alert_desc": info["alert_desc"]})
+    return {"llm_ready": ready,
+            "llm_enabled": enabled,
+            "model": os.environ.get("DEMO_LLM_MODEL", "configured D-Bot model"),
+            "scenarios": scenarios}
+
+
+@app.post("/api/live/run/stop")
+def live_run_stop():
+    p = live.get("proc")
+    if not live.get("running") or not p:
+        raise HTTPException(409, "Không có lượt LIVE nào đang chạy")
+    try:
+        os.killpg(p.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    return {"ok": True, "run_id": live.get("run_id")}
+
+
 @app.post("/api/live/run/{n}")
 def live_run(n: int, diagnose: bool = True):
     if n not in LIVE_CASES:
         raise HTTPException(404)
     with lock:
-        if live["running"]:
+        if live["running"] or state.get("running"):
             raise HTTPException(409, "Một lượt chạy live đang diễn ra")
-    threading.Thread(target=live_worker, args=(n, LIVE_CASES[n], diagnose), daemon=True).start()
-    return {"ok": True, "case": n, "scenario": LIVE_CASES[n], "mode": "live"}
+        llm_enabled = os.environ.get("DEMO_LLM_ENABLED", "false").strip().lower() in {"1", "true", "yes", "y", "on"}
+        if diagnose and (not llm_enabled or not os.environ.get("DEMO_LLM_API_KEY", "").strip()):
+            raise HTTPException(503, "LIVE + D-Bot chưa sẵn sàng: bật DEMO_LLM_ENABLED và cấu hình DEMO_LLM_API_KEY trong .env")
+        run_id = uuid.uuid4().hex
+        live.update(running=True, case=n, scenario=LIVE_CASES[n], run_id=run_id,
+                    error=None, trace=None, log=[], llm_expected=diagnose)
+    threading.Thread(target=live_worker, args=(n, LIVE_CASES[n], diagnose, run_id), daemon=True).start()
+    return {"ok": True, "case": n, "scenario": LIVE_CASES[n], "run_id": run_id, "mode": "live"}
 
 
 @app.get("/api/live/run/state")

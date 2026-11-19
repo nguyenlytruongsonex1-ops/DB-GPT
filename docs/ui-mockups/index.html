@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D-Bot — LIVE sẵn sàng</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="mockups.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-white border-bottom">
+    <div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-mark" aria-hidden="true">DB</div>
+        <div>
+          <div class="fw-bold fs-5 lh-sm">D-Bot</div>
+          <div class="small text-secondary-emphasis">Demo chẩn đoán PostgreSQL E2E</div>
+        </div>
+      </div>
+      <span class="badge text-bg-light border">Bản tĩnh để review</span>
+    </div>
+  </header>
+
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot">
+      <div class="nav nav-tabs mb-4" role="tablist">
+        <a class="nav-link active" href="index.html" role="tab" aria-selected="true" aria-current="page" data-testid="tab-live">LIVE</a>
+        <a class="nav-link" href="offline.html" role="tab" aria-selected="false" data-testid="tab-offline">Offline</a>
+        <a class="nav-link" href="history.html" role="tab" aria-selected="false" data-testid="tab-history">Lịch sử</a>
+      </div>
+    </nav>
+
+    <div class="review-switcher p-3 mb-4 d-flex flex-wrap align-items-center gap-2" aria-label="Chọn trạng thái mockup LIVE">
+      <span class="small fw-semibold me-2">Review trạng thái LIVE:</span>
+      <a class="btn btn-primary btn-sm" href="index.html" aria-current="page">Sẵn sàng</a>
+      <a class="btn btn-outline-secondary btn-sm" href="live-running.html">Đang chạy</a>
+      <a class="btn btn-outline-secondary btn-sm" href="live-result.html">Kết quả</a>
+    </div>
+
+    <section class="status-strip surface p-3 p-md-4 mb-4" aria-labelledby="system-status-title" data-testid="live-status">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="status-dot" aria-hidden="true"></span>
+            <h1 id="system-status-title" class="h5 mb-0">Hệ thống sẵn sàng</h1>
+          </div>
+          <p class="mb-0 text-secondary-emphasis">Chọn một kịch bản. D-Bot sẽ tạo workload thật, thu tín hiệu và tạo báo cáo chẩn đoán.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2" aria-label="Trạng thái thành phần">
+          <span class="badge rounded-pill text-bg-light border">PostgreSQL · OK</span>
+          <span class="badge rounded-pill text-bg-light border">Prometheus · OK</span>
+          <span class="badge rounded-pill text-bg-light border">LLM · Sẵn sàng</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="row g-4 align-items-start">
+      <section class="col-lg-8" aria-labelledby="scenario-title">
+        <div class="surface p-3 p-md-4">
+          <div class="mb-4">
+            <div class="eyebrow mb-2">Bước 1</div>
+            <h2 id="scenario-title" class="h3 mb-2">Chọn kịch bản cần kiểm tra</h2>
+            <p class="text-secondary-emphasis mb-0">Mỗi lần chỉ chạy một kịch bản. Lựa chọn chưa khởi động workload.</p>
+          </div>
+
+          <fieldset>
+            <legend class="visually-hidden">Năm kịch bản PostgreSQL LIVE</legend>
+            <div class="row g-3">
+              <div class="col-md-6 scenario-option">
+                <input class="form-check-input" type="radio" name="scenario" id="scenario-large-read" data-agent-id="scenario-large-read">
+                <label class="scenario-card p-3 pe-5" for="scenario-large-read">
+                  <span class="badge text-bg-light border mb-2">01</span>
+                  <span class="d-block fw-bold mb-1">Đọc dữ liệu quá lớn</span>
+                  <span class="d-block small text-secondary-emphasis mb-2">Ứng dụng kéo dữ liệu khổng lồ bằng truy vấn không phân trang.</span>
+                  <span class="scenario-code">large_read · node load</span>
+                </label>
+              </div>
+              <div class="col-md-6 scenario-option">
+                <input class="form-check-input" type="radio" name="scenario" id="scenario-bulk-delete" data-agent-id="scenario-bulk-delete">
+                <label class="scenario-card p-3 pe-5" for="scenario-bulk-delete">
+                  <span class="badge text-bg-light border mb-2">02</span>
+                  <span class="d-block fw-bold mb-1">Xóa dữ liệu hàng loạt</span>
+                  <span class="d-block small text-secondary-emphasis mb-2">Một tác vụ xóa nhiều dòng cùng lúc làm CPU tăng mạnh.</span>
+                  <span class="scenario-code">bulk_delete · CPU</span>
+                </label>
+              </div>
+              <div class="col-md-6 scenario-option">
+                <input class="form-check-input" type="radio" name="scenario" id="scenario-many-indexes" data-agent-id="scenario-many-indexes">
+                <label class="scenario-card p-3 pe-5" for="scenario-many-indexes">
+                  <span class="badge text-bg-light border mb-2">03</span>
+                  <span class="d-block fw-bold mb-1">Quá nhiều chỉ mục</span>
+                  <span class="d-block small text-secondary-emphasis mb-2">Bảng có nhiều index, làm ghi dữ liệu chậm và tăng tải máy.</span>
+                  <span class="scenario-code">many_indexes · node load</span>
+                </label>
+              </div>
+              <div class="col-md-6 scenario-option">
+                <input class="form-check-input" type="radio" name="scenario" id="scenario-concurrent-writes" checked data-agent-id="scenario-concurrent-writes">
+                <label class="scenario-card p-3 pe-5" for="scenario-concurrent-writes">
+                  <span class="badge text-bg-primary mb-2">04 · Đang chọn</span>
+                  <span class="d-block fw-bold mb-1">Ghi dữ liệu đồng thời</span>
+                  <span class="d-block small text-secondary-emphasis mb-2">Nhiều người dùng ghi/commit cùng lúc làm hệ thống nghẽn.</span>
+                  <span class="scenario-code">concurrent_writes · locks</span>
+                </label>
+              </div>
+              <div class="col-12 scenario-option">
+                <input class="form-check-input" type="radio" name="scenario" id="scenario-slow-join" data-agent-id="scenario-slow-join">
+                <label class="scenario-card p-3 pe-5" for="scenario-slow-join">
+                  <span class="badge text-bg-light border mb-2">05</span>
+                  <span class="d-block fw-bold mb-1">Join chậm, tranh chấp CPU</span>
+                  <span class="d-block small text-secondary-emphasis mb-2">Truy vấn nối bảng kém hiệu quả khiến các tiến trình giành nhau CPU.</span>
+                  <span class="scenario-code">slow_join · CPU contention</span>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <aside class="col-lg-4" aria-labelledby="run-summary-title">
+        <div class="surface p-3 p-md-4 position-sticky" style="top: 1rem">
+          <div class="eyebrow mb-2">Bước 2</div>
+          <h2 id="run-summary-title" class="h4">Xác nhận lượt chạy</h2>
+          <dl class="row small mt-4 mb-3">
+            <dt class="col-5 text-secondary-emphasis">Kịch bản</dt>
+            <dd class="col-7 fw-semibold">Ghi dữ liệu đồng thời</dd>
+            <dt class="col-5 text-secondary-emphasis">Thời lượng</dt>
+            <dd class="col-7">Khoảng 3–4 phút</dd>
+            <dt class="col-5 text-secondary-emphasis">Tác động</dt>
+            <dd class="col-7">Tạo workload PostgreSQL</dd>
+            <dt class="col-5 text-secondary-emphasis">Model</dt>
+            <dd class="col-7">Có thể phát sinh chi phí</dd>
+          </dl>
+          <div class="alert alert-warning small" role="note">
+            Chỉ bấm chạy khi môi trường demo không có lượt LIVE khác đang hoạt động.
+          </div>
+          <a class="btn btn-primary btn-lg w-100" href="live-running.html" data-testid="run-live" aria-label="Bắt đầu chẩn đoán LIVE: Ghi dữ liệu đồng thời">Bắt đầu chẩn đoán</a>
+          <p class="small text-secondary-emphasis text-center mt-3 mb-0">Chọn kịch bản không tự động chạy.</p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="surface p-3 p-md-4 mt-4" aria-labelledby="workflow-title" data-testid="live-workflow">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-4">
+        <div>
+          <div class="eyebrow mb-2">Workflow E2E</div>
+          <h2 id="workflow-title" class="h4 mb-1">Một đường đi, bảy bước kiểm chứng</h2>
+        </div>
+        <span class="small text-secondary-emphasis">Chưa bắt đầu</span>
+      </div>
+      <ol class="workflow" aria-label="Các bước chẩn đoán LIVE">
+        <li class="workflow-step"><span class="workflow-marker">1</span><span class="workflow-label">Workload</span></li>
+        <li class="workflow-step"><span class="workflow-marker">2</span><span class="workflow-label">Metric</span></li>
+        <li class="workflow-step"><span class="workflow-marker">3</span><span class="workflow-label">Alert</span></li>
+        <li class="workflow-step"><span class="workflow-marker">4</span><span class="workflow-label">Webhook</span></li>
+        <li class="workflow-step"><span class="workflow-marker">5</span><span class="workflow-label">D-Bot</span></li>
+        <li class="workflow-step"><span class="workflow-marker">6</span><span class="workflow-label">Report</span></li>
+        <li class="workflow-step"><span class="workflow-marker">7</span><span class="workflow-label">Cleanup</span></li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

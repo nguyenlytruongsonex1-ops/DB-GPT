@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D-Bot — LIVE đang chạy</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="mockups.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-white border-bottom">
+    <div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-mark" aria-hidden="true">DB</div>
+        <div><div class="fw-bold fs-5 lh-sm">D-Bot</div><div class="small text-secondary-emphasis">Demo chẩn đoán PostgreSQL E2E</div></div>
+      </div>
+      <span class="badge text-bg-light border">Bản tĩnh để review</span>
+    </div>
+  </header>
+
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot">
+      <div class="nav nav-tabs mb-4" role="tablist">
+        <a class="nav-link active" href="index.html" role="tab" aria-selected="true" data-testid="tab-live">LIVE</a>
+        <a class="nav-link" href="offline.html" role="tab" aria-selected="false" data-testid="tab-offline">Offline</a>
+        <a class="nav-link" href="history.html" role="tab" aria-selected="false" data-testid="tab-history">Lịch sử</a>
+      </div>
+    </nav>
+
+    <div class="review-switcher p-3 mb-4 d-flex flex-wrap align-items-center gap-2">
+      <span class="small fw-semibold me-2">Review trạng thái LIVE:</span>
+      <a class="btn btn-outline-secondary btn-sm" href="index.html">Sẵn sàng</a>
+      <a class="btn btn-primary btn-sm" href="live-running.html" aria-current="page">Đang chạy</a>
+      <a class="btn btn-outline-secondary btn-sm" href="live-result.html">Kết quả</a>
+    </div>
+
+    <section class="surface p-3 p-md-4 mb-4" aria-labelledby="run-title" data-testid="live-status" aria-busy="true">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="spinner-border spinner-border-sm text-primary" aria-hidden="true"></span>
+            <span class="badge text-bg-primary">LIVE · Đang chạy</span>
+          </div>
+          <h1 id="run-title" class="h3 mb-2">Ghi dữ liệu đồng thời</h1>
+          <p class="text-secondary-emphasis mb-0">D-Bot đang phân tích bằng chứng sau khi webhook được tiếp nhận.</p>
+        </div>
+        <div class="text-lg-end">
+          <div class="small text-secondary-emphasis">Run ID</div>
+          <div class="font-monospace fw-semibold mb-2" data-testid="live-run-id">live-04-153842</div>
+          <button class="btn btn-outline-danger" type="button" data-testid="stop-live">Dừng và cleanup</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="surface p-3 p-md-4 mb-4" aria-labelledby="workflow-title" data-testid="live-workflow">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-4">
+        <div><div class="eyebrow mb-2">Tiến trình LIVE</div><h2 id="workflow-title" class="h4 mb-1">D-Bot đang chẩn đoán</h2></div>
+        <div class="text-md-end"><strong>02:06</strong><div class="small text-secondary-emphasis">cập nhật 5 giây trước</div></div>
+      </div>
+      <div class="progress mb-4" role="progressbar" aria-label="Tiến độ workflow LIVE" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100" style="height: 0.65rem">
+        <div class="progress-bar" style="width: 68%"></div>
+      </div>
+      <ol class="workflow" aria-label="Các bước chẩn đoán LIVE">
+        <li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Workload</span></li>
+        <li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Metric</span></li>
+        <li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Alert</span></li>
+        <li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Webhook</span></li>
+        <li class="workflow-step is-current" aria-current="step"><span class="workflow-marker">5</span><span class="workflow-label">D-Bot</span></li>
+        <li class="workflow-step"><span class="workflow-marker">6</span><span class="workflow-label">Report</span></li>
+        <li class="workflow-step"><span class="workflow-marker">7</span><span class="workflow-label">Cleanup</span></li>
+      </ol>
+    </section>
+
+    <div class="row g-4">
+      <section class="col-lg-7" aria-labelledby="current-status-title">
+        <div class="surface p-3 p-md-4 h-100">
+          <div class="eyebrow mb-2">Đang xử lý</div>
+          <h2 id="current-status-title" class="h4">Nhóm chuyên gia đang tổng hợp nguyên nhân</h2>
+          <p class="text-secondary-emphasis">Webhook đã chuyển alert và metric sang D-Bot. Báo cáo chỉ xuất hiện khi bước chẩn đoán hoàn tất.</p>
+          <div class="alert alert-primary mb-0" role="status">
+            <strong>CpuExpert</strong> và <strong>WorkloadExpert</strong> đang đối chiếu khóa, tải CPU và mức độ đồng thời.
+          </div>
+        </div>
+      </section>
+      <section class="col-lg-5" aria-labelledby="evidence-title">
+        <div class="surface p-3 p-md-4 h-100">
+          <div class="eyebrow mb-2">Bằng chứng mới nhất</div>
+          <h2 id="evidence-title" class="h4">Hai tín hiệu cần chú ý</h2>
+          <div class="row g-3 mt-1">
+            <div class="col-6"><div class="metric-card p-3"><div class="small text-secondary-emphasis">Node load</div><div class="metric-value h3 mb-0">1,59</div><div class="small text-danger">vượt ngưỡng</div></div></div>
+            <div class="col-6"><div class="metric-card p-3"><div class="small text-secondary-emphasis">Blocked</div><div class="metric-value h3 mb-0">4</div><div class="small text-danger">processes</div></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <details class="surface technical-details p-3 p-md-4 mt-4" data-testid="technical-details">
+      <summary>Chi tiết kỹ thuật: log và trace</summary>
+      <pre class="technical-code p-3 mb-0">[01:52] Webhook received: concurrent_writes
+[01:57] D-Bot selected experts: CpuExpert, WorkloadExpert
+[02:06] Diagnosis in progress...</pre>
+    </details>
+  </main>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D-Bot — Bộ giao diện tĩnh để thảo luận</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    html,
+    body {
+      margin: 0;
+      color: #172033;
+      background: #fff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      display: flex;
+      min-height: 273mm;
+      flex-direction: column;
+      break-after: page;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+
+    .cover {
+      justify-content: center;
+      padding: 14mm;
+      border: 1px solid #dce3ec;
+      border-radius: 8mm;
+      background: linear-gradient(145deg, #f7faff 0%, #eef4ff 55%, #eaf8f0 100%);
+    }
+
+    .brand {
+      display: inline-grid;
+      width: 18mm;
+      height: 18mm;
+      margin-bottom: 12mm;
+      place-items: center;
+      border-radius: 5mm;
+      background: #1d4ed8;
+      color: #fff;
+      font-size: 18pt;
+      font-weight: 800;
+    }
+
+    .eyebrow {
+      margin: 0 0 4mm;
+      color: #1d4ed8;
+      font-size: 9pt;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 150mm;
+      margin: 0 0 6mm;
+      font-size: 30pt;
+      line-height: 1.12;
+    }
+
+    .lead {
+      max-width: 145mm;
+      margin: 0 0 10mm;
+      color: #526078;
+      font-size: 13pt;
+      line-height: 1.55;
+    }
+
+    .scope {
+      display: grid;
+      max-width: 150mm;
+      gap: 3mm;
+      margin: 0;
+      padding: 6mm 7mm;
+      border-left: 4px solid #1d4ed8;
+      border-radius: 3mm;
+      background: rgba(255, 255, 255, 0.76);
+      font-size: 10.5pt;
+      line-height: 1.45;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8mm;
+      margin-bottom: 6mm;
+    }
+
+    .page-head h2 {
+      margin: 0 0 2mm;
+      font-size: 19pt;
+      line-height: 1.2;
+    }
+
+    .page-head p {
+      margin: 0;
+      color: #657084;
+      font-size: 10pt;
+      line-height: 1.4;
+    }
+
+    .page-number {
+      flex: 0 0 auto;
+      padding: 2mm 3mm;
+      border: 1px solid #dce3ec;
+      border-radius: 99px;
+      color: #657084;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+
+    .screen-frame {
+      display: grid;
+      flex: 1;
+      min-height: 0;
+      place-items: start center;
+      overflow: hidden;
+      border: 1px solid #dce3ec;
+      border-radius: 4mm;
+      background: #f4f7fb;
+    }
+
+    .screen-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 232mm;
+      object-fit: contain;
+      object-position: top center;
+    }
+
+    .page-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 8mm;
+      margin-top: 4mm;
+      color: #7b8799;
+      font-size: 8.5pt;
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div class="brand" aria-hidden="true">DB</div>
+    <p class="eyebrow">D-Bot · UI review</p>
+    <h1>Bộ giao diện tĩnh để thảo luận</h1>
+    <p class="lead">Bộ mockup Bootstrap 5 cho luồng chẩn đoán PostgreSQL: LIVE là màn hình chính; Offline và Lịch sử là phần phụ; kết quả có hội thoại hội chẩn đa bot.</p>
+    <div class="scope">
+      <strong>Phạm vi tài liệu</strong>
+      <span>Đây là bản tĩnh để review bố cục và luồng sử dụng. Tài liệu không gọi API, không tạo workload PostgreSQL và không gọi LLM.</span>
+      <span>Luồng chính: Workload → Metric → Alert → Webhook → D-Bot → Report → Cleanup.</span>
+    </div>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 1</p><h2>LIVE · Sẵn sàng</h2><p>Chọn một kịch bản, xem trạng thái môi trường và bắt đầu một lượt chẩn đoán.</p></div>
+      <span class="page-number">2 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="screenshots/live-ready.png" alt="Màn hình LIVE sẵn sàng"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>Bootstrap 5 · Bản tĩnh</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 2</p><h2>LIVE · Đang chạy</h2><p>Hiển thị bước hiện tại, tiến độ E2E, run ID và thao tác dừng kèm cleanup.</p></div>
+      <span class="page-number">3 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="screenshots/live-running.png" alt="Màn hình LIVE đang chạy"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>Bootstrap 5 · Bản tĩnh</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 3 · Phần 1</p><h2>LIVE · Kết quả và đồng thuận</h2><p>Kết luận, bằng chứng chính và đồng thuận đa bot xuất hiện trước transcript kỹ thuật.</p></div>
+      <span class="page-number">4 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="review-assets/live-result-top.png" alt="Phần trên màn hình kết quả LIVE"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>Kết quả gắn với đúng run ID</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 3 · Phần 2</p><h2>Hội thoại hội chẩn đa bot</h2><p>Nhóm chat chỉ đọc: bot, vai trò, thời gian, phản biện, bằng chứng viện dẫn và kết luận điều phối.</p></div>
+      <span class="page-number">5 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="review-assets/live-result-bottom.png" alt="Hội thoại hội chẩn đa bot và báo cáo"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>4 bot · 5 tin nhắn · Đã đồng thuận</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 4</p><h2>Offline · Phân tích dữ liệu đã lưu</h2><p>Phân biệt rõ với LIVE; không tạo workload PostgreSQL mới.</p></div>
+      <span class="page-number">6 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="screenshots/offline.png" alt="Màn hình phân tích Offline"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>Chế độ phụ · Tải khi mở</span></footer>
+  </section>
+
+  <section class="page">
+    <header class="page-head">
+      <div><p class="eyebrow">Màn hình 5</p><h2>Lịch sử · Tra cứu báo cáo</h2><p>Lọc theo nguồn và trạng thái; mỗi trang hiển thị tối đa 25 báo cáo.</p></div>
+      <span class="page-number">7 / 7</span>
+    </header>
+    <div class="screen-frame"><img src="screenshots/history.png" alt="Màn hình lịch sử báo cáo"></div>
+    <footer class="page-foot"><span>D-Bot UI Review</span><span>LIVE và Offline được gắn nhãn riêng</span></footer>
+  </section>
+</body>
+</html>

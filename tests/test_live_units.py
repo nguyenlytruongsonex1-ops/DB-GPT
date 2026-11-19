@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import threading
@@ -189,6 +190,15 @@ class Repo(unittest.TestCase):
         self.assertIn("demo_rules.yml", compose)
         self.assertIn("demo_live", compose)
         self.assertIn("DEMO_LLM_ENABLED", compose)
+        self.assertIn("DEMO_LLM_API_KEY: ${DEMO_LLM_API_KEY:-}", compose)
+        demo_service = compose.split("  demo:\n", 1)[1].split("  python_app:\n", 1)[0]
+        webhook_service = compose.split("  python_app:\n", 1)[1]
+        self.assertIn("DEMO_LLM_ENABLED: ${DEMO_LLM_ENABLED:-false}", demo_service)
+        self.assertIn('DEMO_LLM_ENABLED: "false"', webhook_service)
+        self.assertNotIn("DEMO_LLM_API_KEY:", webhook_service)
+        runner = text(os.path.join(ROOT, "live_scenarios/runner.py"))
+        self.assertIn('env["OPENAI_API_KEY"] = api_key', runner)
+        self.assertIn('env["LLM_MODEL"] = os.environ.get("DEMO_LLM_MODEL"', runner)
         self.assertNotIn("pgsql_rules.yml", compose)
         self.assertNotIn("8.131.129.55", metric)
         self.assertNotIn("112.27.58.65", metric)
@@ -197,6 +207,16 @@ class Repo(unittest.TestCase):
         self.assertIn("http://python_app:8023/alert", am)
         self.assertIn("demo_rules.yml", prom)
         self.assertIn("scrape_timeout: 4s", prom)
+
+
+class LiveMetricWindow(unittest.TestCase):
+    def test_short_prometheus_series_has_nonzero_sample_stride(self):
+        code = (
+            "import sys; sys.argv=['test','--anomaly_file','test_cases/testing_cases_1.json']; "
+            "from multiagents.tools.metrics import processed_values; "
+            "assert 'evenly_sampled_values' in processed_values([1.0, 2.0, 3.0])"
+        )
+        subprocess.run([sys.executable, "-c", code], cwd=ROOT, check=True, capture_output=True, text=True)
 
 
 class ArgparseFlag(unittest.TestCase):
