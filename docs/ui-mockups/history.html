@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>D-Bot — Lịch sử báo cáo</title>
+  <link href="bootstrap.min.css" rel="stylesheet"><link href="mockups.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-white border-bottom"><div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3"><div class="d-flex align-items-center gap-3"><div class="brand-mark" aria-hidden="true">DB</div><div><div class="fw-bold fs-5 lh-sm">D-Bot</div><div class="small text-secondary-emphasis">Demo chẩn đoán PostgreSQL E2E</div></div></div><span class="badge text-bg-light border">Bản tĩnh để review</span></div></header>
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot"><div class="nav nav-tabs mb-4" role="tablist"><a class="nav-link" href="index.html" role="tab" aria-selected="false" data-testid="tab-live">LIVE</a><a class="nav-link" href="offline.html" role="tab" aria-selected="false" data-testid="tab-offline">Offline</a><a class="nav-link active" href="history.html" role="tab" aria-selected="true" aria-current="page" data-testid="tab-history">Lịch sử</a></div></nav>
+
+    <section class="surface p-3 p-md-4" aria-labelledby="history-title">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4"><div><div class="eyebrow mb-2">Báo cáo đã lưu</div><h1 id="history-title" class="h3 mb-2">Lịch sử chẩn đoán</h1><p class="text-secondary-emphasis mb-0">Tra cứu kết quả LIVE và Offline. Mỗi trang hiển thị tối đa 25 báo cáo.</p></div><span class="badge text-bg-light border align-self-start">113 báo cáo</span></div>
+
+      <form class="row g-3 mb-4" aria-label="Bộ lọc lịch sử">
+        <div class="col-lg-6"><label class="form-label" for="history-search">Tìm báo cáo</label><input id="history-search" class="form-control" type="search" placeholder="Tên kịch bản hoặc run ID"></div>
+        <div class="col-sm-6 col-lg-3"><label class="form-label" for="source-filter">Nguồn</label><select id="source-filter" class="form-select"><option>Tất cả</option><option>LIVE</option><option>Offline</option></select></div>
+        <div class="col-sm-6 col-lg-3 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">Áp dụng bộ lọc</button></div>
+      </form>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <caption class="visually-hidden">Danh sách báo cáo chẩn đoán D-Bot</caption>
+          <thead class="table-light"><tr><th scope="col">Thời gian</th><th scope="col">Kịch bản</th><th scope="col">Nguồn</th><th scope="col">Trạng thái</th><th scope="col">Thời lượng</th><th scope="col" class="text-end">Hành động</th></tr></thead>
+          <tbody>
+            <tr><td><time datetime="2026-11-19T15:38:42+07:00">19/11 · 15:38</time></td><td><strong>Ghi dữ liệu đồng thời</strong><div class="small text-secondary-emphasis font-monospace">live-04-153842</div></td><td><span class="badge source-live">LIVE</span></td><td><span class="text-success fw-semibold">Hoàn tất</span></td><td>2:43</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="live-result.html" aria-label="Mở báo cáo Ghi dữ liệu đồng thời lúc 15:38">Mở báo cáo</a></td></tr>
+            <tr><td><time datetime="2026-11-19T14:21:00+07:00">19/11 · 14:21</time></td><td><strong>Đọc dữ liệu quá lớn</strong><div class="small text-secondary-emphasis font-monospace">replay-case-01</div></td><td><span class="badge source-offline">Offline</span></td><td><span class="text-success fw-semibold">Hoàn tất</span></td><td>1:58</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" aria-label="Mở báo cáo Đọc dữ liệu quá lớn lúc 14:21">Mở báo cáo</button></td></tr>
+            <tr><td><time datetime="2026-11-19T11:06:00+07:00">19/11 · 11:06</time></td><td><strong>Join chậm, tranh chấp CPU</strong><div class="small text-secondary-emphasis font-monospace">live-05-110600</div></td><td><span class="badge source-live">LIVE</span></td><td><span class="text-danger fw-semibold">Cleanup lỗi</span></td><td>3:12</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" aria-label="Mở báo cáo Join chậm lúc 11:06">Mở báo cáo</button></td></tr>
+            <tr><td><time datetime="2026-11-18T16:40:00+07:00">18/11 · 16:40</time></td><td><strong>Quá nhiều chỉ mục</strong><div class="small text-secondary-emphasis font-monospace">live-03-164000</div></td><td><span class="badge source-live">LIVE</span></td><td><span class="text-success fw-semibold">Hoàn tất</span></td><td>2:35</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" aria-label="Mở báo cáo Quá nhiều chỉ mục lúc 16:40">Mở báo cáo</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mt-4" aria-label="Phân trang lịch sử"><span class="small text-secondary-emphasis">Hiển thị 1–25 trong 113 báo cáo</span><ul class="pagination pagination-sm mb-0"><li class="page-item disabled"><span class="page-link">Trước</span></li><li class="page-item active" aria-current="page"><span class="page-link">1</span></li><li class="page-item"><button class="page-link" type="button">2</button></li><li class="page-item"><button class="page-link" type="button">3</button></li><li class="page-item"><button class="page-link" type="button">Sau</button></li></ul></nav>
+    </section>
+  </main>
+</body>
+</html>

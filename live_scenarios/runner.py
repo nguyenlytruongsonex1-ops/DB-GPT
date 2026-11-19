@@ -142,6 +142,33 @@ def build_anomaly(scenario, window_start: float, window_end: float, firing_alert
     }
 
 
+def compact_consultation(record: dict) -> dict:
+    """Keep only messages explicitly exchanged in the round-table phase."""
+    messages = []
+    participants = []
+    seen = set()
+    raw_messages = (record.get("brainstorming") or {}).get("messages") or []
+    for index, message in enumerate(raw_messages[-50:], start=1):
+        sender = str(message.get("sender") or "D-Bot").strip()
+        text = str(message.get("data") or "")
+        text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"[ \t]+", " ", text)
+        text = re.sub(r"\n{3,}", "\n\n", text).strip()[:1600]
+        if not text:
+            continue
+        if sender not in seen:
+            seen.add(sender)
+            participants.append(sender)
+        messages.append({
+            "id": f"message-{index}",
+            "sender": sender,
+            "time": str(message.get("time") or ""),
+            "text": text,
+        })
+    return {"participants": participants, "messages": messages}
+
+
 def run_diagnosis(anomaly_path: Path, allow_llm: bool) -> dict:
     cmd = [sys.executable, "run_diagnose.py", "--anomaly_file", str(anomaly_path), "--enable_prometheus", "true"]
     env = dict(os.environ)
@@ -195,9 +222,12 @@ def run_diagnosis(anomaly_path: Path, allow_llm: bool) -> dict:
     result_files = [p for p in result_files if p.stat().st_mtime >= started]
     result_file = max(result_files, key=lambda p: p.stat().st_mtime) if result_files else None
     report = None
+    consultation = {"participants": [], "messages": []}
     if result_file:
         try:
-            report = json.loads(result_file.read_text(encoding="utf-8")).get("report")
+            record = json.loads(result_file.read_text(encoding="utf-8"))
+            report = record.get("report")
+            consultation = compact_consultation(record)
         except Exception:
             report = None
     return {
@@ -207,6 +237,7 @@ def run_diagnosis(anomaly_path: Path, allow_llm: bool) -> dict:
         "model": env.get("LLM_MODEL"),
         "result_file": str(result_file.relative_to(Path(__file__).resolve().parent.parent)) if result_file else None,
         "report": report,
+        "consultation": consultation,
         "tail": output_tail,
     }
 

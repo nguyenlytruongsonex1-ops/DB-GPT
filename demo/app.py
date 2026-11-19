@@ -135,6 +135,11 @@ def worker(n, model=None, out=None):
 def index(): return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
 
 
+@app.get("/assets/bootstrap.min.css")
+def bootstrap_css():
+    return FileResponse(os.path.join(os.path.dirname(__file__), "bootstrap.min.css"), media_type="text/css")
+
+
 @app.get("/api/cases")
 def cases(): return [case_info(n) for n in CASES]
 
@@ -171,23 +176,51 @@ def replay(n: int):
 def _rel(f): return os.path.relpath(f, ROOT)
 
 
-@app.get("/api/history")
-def history():
-    """Liệt kê mọi kết quả đã lưu: demo_results (có case/model) + alert_results gốc."""
+def history_records():
+    """Build normalized history rows without exposing report payloads."""
     out = []
+    live_result_ids = set()
+    for trace_file in glob.glob(os.path.join(ROOT, "alert_results", "live_scenarios", "*", "*.json")):
+        if trace_file.endswith("_anomaly.json"):
+            continue
+        try:
+            trace = json.load(open(trace_file))
+            result_file = ((trace.get("diagnosis") or {}).get("result_file") or "").strip()
+            if result_file:
+                live_result_ids.add(os.path.normpath(result_file))
+        except Exception:
+            continue
     for f in glob.glob(os.path.join(SAVE, "**", "case_*.json"), recursive=True):
         try: r = json.load(open(f))
         except Exception: continue
         sub = os.path.relpath(os.path.dirname(f), SAVE)
         out.append({"id": _rel(f), "case": r.get("case"), "model": r.get("model") or "", "set": "" if sub == "." else sub,
                     "time": r.get("finished_at"), "elapsed": r.get("elapsed"), "severity": r["record"].get("severity"),
-                    "title": r["record"].get("title", "")})
+                    "title": r["record"].get("title", ""), "source": "OFFLINE", "status": "Hoàn tất"})
     for f in glob.glob(os.path.join(ROOT, "alert_results", "*", "*.jsonl")):
         try: r = json.load(open(f)); t = int(r.get("time") or 0)
         except Exception: continue
+        result_id = os.path.normpath(_rel(f))
         out.append({"id": _rel(f), "case": None, "model": os.path.basename(os.path.dirname(f)), "set": "alert_results",
                     "time": t, "elapsed": None, "severity": r.get("severity"), "title": r.get("title", "")})
+        out[-1].update(source="LIVE" if result_id in live_result_ids else "OFFLINE", status="Hoàn tất")
     return sorted(out, key=lambda x: -(x["time"] or 0))
+
+
+@app.get("/api/history")
+def history(page: int = 1, page_size: int = 25, q: str = ""):
+    """Paginate saved results; history is loaded only when its tab opens."""
+    page = max(1, page)
+    page_size = min(100, max(1, page_size))
+    rows = history_records()
+    query = q.strip().lower()
+    if query:
+        rows = [row for row in rows if query in " ".join(str(row.get(key) or "") for key in
+                ("title", "model", "set", "source", "status")).lower()]
+    total = len(rows)
+    start = (page - 1) * page_size
+    return {"items": rows[start:start + page_size], "total": total, "page": page,
+            "page_size": page_size, "pages": max(1, (total + page_size - 1) // page_size)}
 
 
 @app.get("/api/result")
@@ -307,10 +340,15 @@ def live_scenarios():
 def live_run_config():
     enabled = os.environ.get("DEMO_LLM_ENABLED", "false").strip().lower() in {"1", "true", "yes", "y", "on"}
     ready = enabled and bool(os.environ.get("DEMO_LLM_API_KEY", "").strip())
+    scenarios = []
+    for n, key in LIVE_CASES.items():
+        info = case_info(n)
+        scenarios.append({"case": n, "scenario": key, "title": info["title"], "desc": info["desc"],
+                          "alert": info["alert"], "alert_desc": info["alert_desc"]})
     return {"llm_ready": ready,
             "llm_enabled": enabled,
             "model": os.environ.get("DEMO_LLM_MODEL", "configured D-Bot model"),
-            "scenarios": [{"case": n, "scenario": key} for n, key in LIVE_CASES.items()]}
+            "scenarios": scenarios}
 
 
 @app.post("/api/live/run/stop")

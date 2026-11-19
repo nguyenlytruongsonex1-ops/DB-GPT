@@ -1,138 +1,722 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 rx=%229%22 fill=%22%23087e8b%22/%3E%3Ctext x=%2211%22 y=%2229%22 fill=%22white%22 font-size=%2224%22 font-family=%22sans-serif%22 font-weight=%22700%22%3ED%3C/text%3E%3C/svg%3E">
-<title>D-Bot · Bác sĩ AI cho cơ sở dữ liệu</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>
-:root{color-scheme:light;--ink:#152236;--muted:#617086;--line:#dce4ee;--paper:#fff;--canvas:#f3f6fa;--navy:#10243c;--teal:#087e8b;--teal-soft:#e8f5f6;--blue:#2563eb;--blue-soft:#edf3ff;--amber:#b45309;--amber-soft:#fff6e7;--red:#b42318;--red-soft:#fff0ef;--shadow:0 10px 28px rgba(20,42,68,.06)}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:82px}body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input{font:inherit}button,[role=button],a{cursor:pointer}button{border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:9px 14px;font-weight:650;transition:background .18s,border-color .18s,transform .18s}button:hover:not(:disabled){border-color:#9cabbc;background:#f8fafc;transform:translateY(-1px)}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #7dd3df;outline-offset:2px}button:disabled{opacity:.48;cursor:not-allowed}button.pri{background:var(--navy);border-color:var(--navy);color:#fff}button.pri:hover:not(:disabled){background:#1a3859}.hide{display:none!important}
-.app-shell{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:236px;background:var(--navy);color:#d5e1ed;padding:24px 16px;display:flex;flex-direction:column;z-index:5}.brand{display:flex;align-items:center;gap:11px;padding:3px 8px 27px;color:white}.brand-mark{width:35px;height:35px;border-radius:10px;background:linear-gradient(145deg,#24a7a5,#087e8b);display:grid;place-items:center;color:#fff;font-size:18px;font-weight:800;box-shadow:0 5px 14px #0a697452}.brand b{font-size:15px;letter-spacing:.02em}.brand small{display:block;color:#9db0c4;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.nav-label{padding:12px 10px 7px;color:#7890a8;font-size:10px;font-weight:750;letter-spacing:.13em;text-transform:uppercase}.side-nav{display:grid;gap:4px}.side-nav a{padding:10px 11px;border-radius:8px;color:#c5d2df;text-decoration:none;font-weight:550}.side-nav a:hover,.side-nav a:focus-visible{background:#ffffff14;color:white}.side-nav a span{display:inline-block;width:23px;color:#91a9c1}.side-note{margin-top:auto;padding:13px;border:1px solid #ffffff1b;background:#ffffff0b;border-radius:10px;color:#b6c5d4;font-size:12px}.side-note b{display:block;color:#f4f8fb;margin-bottom:4px}.main{margin-left:236px;max-width:1600px;padding:0 36px 56px}.topbar{height:66px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);margin-bottom:30px}.crumb{font-size:12px;color:var(--muted)}.top-status{display:flex;align-items:center;gap:8px;color:#445469;font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:#18a779;box-shadow:0 0 0 3px #18a77920}.hero{padding:9px 0 28px}.eyebrow{margin:0 0 8px;color:var(--teal);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.hero h1{font-size:clamp(26px,3vw,36px);line-height:1.17;letter-spacing:-.035em;margin:0;color:var(--navy)}.hero p{max-width:800px;color:var(--muted);font-size:15px;margin:11px 0 18px}.mode-links{display:flex;gap:10px;flex-wrap:wrap}.mode-link{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 13px;text-decoration:none;color:var(--ink);font-weight:700;box-shadow:0 2px 6px #142a4408}.mode-link:hover{border-color:#99adb9}.mode-link.live{color:#086c77}.mode-link.offline{color:var(--blue)}
-.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:23px;margin:0 0 22px;scroll-margin-top:82px}.panel.live-panel{border-top:3px solid var(--teal)}.panel.offline-panel{border-top:3px solid var(--blue)}.panel.history-panel{border-top:3px solid #97a5b7}.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:17px}.section-head h2{margin:0;color:var(--navy);font-size:19px;letter-spacing:-.02em}.section-head p,.sub{color:var(--muted);margin:5px 0 0;max-width:850px}.source-badge{flex:none;display:inline-flex;align-items:center;gap:7px;border:1px solid #b8e2e4;background:var(--teal-soft);color:#086d76;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.035em}.source-badge.offline{border-color:#ccdafc;background:var(--blue-soft);color:#1e55bc}.source-badge .dot{background:currentColor;box-shadow:none;width:7px;height:7px}.callout{border-radius:9px;border:1px solid #d9e5ef;background:#f7fafc;padding:11px 13px;color:#43546a;margin:13px 0;font-size:13px}.callout strong{color:var(--ink)}.flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:18px 0 0}.flow span{border:1px solid var(--line);background:#fff;color:#56677c;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:650}.flow i{font-style:normal;color:#97a5b5;font-size:12px}
-.box{border:1px solid var(--line);border-radius:11px;background:#fff;padding:16px}.box h3{margin:0 0 8px;font-size:14px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.live-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.live-actions #livestart{background:var(--teal);border-color:var(--teal)}.live-actions #livestart:hover:not(:disabled){background:#066a74}.live-actions #livestop{color:var(--red)}#livebadge{display:inline-flex;align-items:center;border-radius:999px;background:#f1f4f7;color:#4c5c70;padding:5px 10px;font-size:12px}.live-panel #livemsg{color:var(--muted);margin:11px 0}.live-panel #livechart{margin-top:10px}.json-disclosure{margin-top:11px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:#f8fafc}pre.json{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:300px;overflow:auto;background:#f4f7fa;border:1px solid #e2e8f0;border-radius:8px;padding:11px;margin:7px 0 0;color:#27374d}
-#ans{accent-color:var(--blue)}.answers-toggle{font-weight:650;color:#4b5e75}.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px;margin-top:12px}.card{min-width:0;border:1px solid var(--line);border-radius:10px;background:#fff;padding:14px;cursor:pointer;transition:.18s box-shadow,.18s border-color,.18s transform}.card:hover{border-color:#a7b7c8;box-shadow:0 8px 22px #162f4a12;transform:translateY(-2px)}.card.sel{border-color:var(--blue);background:#f4f7ff;box-shadow:inset 0 0 0 1px var(--blue)}.card b{display:block;font-size:13px;line-height:1.4;color:var(--navy)}.card small{display:block;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;color:#63748b;margin:8px 0}.card small:first-of-type{color:var(--blue);font-family:inherit;font-weight:750}.card .ans{font-size:11px;color:#37508a;border-top:1px dashed #c4cde0;margin-top:9px;padding-top:8px;display:none}.show .ans{display:block}.case-actions{margin-top:15px}.case-actions .action-note{color:var(--muted);font-size:12px}.case-actions button.pri{background:var(--blue);border-color:var(--blue)}.case-actions button.pri:hover:not(:disabled){background:#1f50c2}
-#prog,#res{scroll-margin-top:82px}.progress-panel{border-left:3px solid var(--amber)}.progress-panel h2,#res h2{font-size:18px;color:var(--navy)}.bar{height:8px;border:0;background:#e8edf3;border-radius:999px;margin:12px 0;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#087e8b,#25a5a7);width:0;transition:width .5s;border-radius:999px}#steps{font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:260px;overflow:auto;border-left:2px solid #9eb4c9;padding-left:12px;color:#506078}.progress-panel .err{border:1px solid #f2c6c2;background:var(--red-soft);color:var(--red);padding:10px;border-radius:8px;font-weight:650}#log{background:#101d2b;color:#cbe2df;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;height:220px;overflow:auto;padding:12px;border-radius:8px;white-space:pre-wrap;margin-top:8px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:13px}.tag{display:inline-block;border:1px solid #d6e0eb;background:#f6f8fb;color:#33465d;border-radius:999px;padding:4px 9px;margin:2px;font-size:11px;font-weight:650}.result-panel{border-top:3px solid var(--teal)}.result-panel h3{font-size:14px;color:#33465d;margin:21px 0 8px}.result-panel .box h3{margin:0 0 8px}.result-panel #dbot{font-weight:650;color:#142b44}.tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:11px}.col{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}.col>b{display:block;background:#f1f5f9;color:#33465d;padding:8px 11px}.result-panel details{border-top:1px solid #e7edf3;padding:8px 10px;font-size:12px}.result-panel details summary{cursor:pointer;font-weight:650;color:#40536b}.result-panel details .md{max-height:320px;overflow:auto}.md p{margin:5px 0}.md table{width:100%;table-layout:fixed;word-break:break-word;font-size:12px;border-collapse:collapse}.md th,.md td{border:1px solid var(--line);padding:6px}.md ul{margin:5px 0;padding-left:18px}#report{border:1px solid var(--line);border-radius:10px;padding:17px;overflow:auto;background:#fff}#report h1,#report h2,#report h3{color:var(--navy)}#report table{border-collapse:collapse}#report td,#report th{border:1px solid var(--line);padding:7px;vertical-align:top}#report th{background:#f2f6fa}.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:11px}.charts .box{padding:10px!important}.charts svg{display:block;border:1px solid #e1e8ef;border-radius:6px;background:#fff}.charts svg text{font:10px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#52647a}
-.history-controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.history-controls input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-width:min(280px,100%);background:#fff}.history-controls #hn{font-size:12px;color:var(--muted)}#histwrap{max-height:360px;overflow:auto;margin-top:12px;border:1px solid var(--line);border-radius:9px}.hist{width:100%;border-collapse:collapse;font-size:12px}.hist td,.hist th{border-bottom:1px solid #e7edf3;padding:9px 11px;text-align:left}.hist th{position:sticky;top:0;background:#f4f7fa;color:#52647a;font-weight:750;z-index:1}.hist tr:hover td{background:#f3f7fa;cursor:pointer}.hist tr:last-child td{border-bottom:0}
-@media(max-width:1200px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.main{padding-left:25px;padding-right:25px}}
-@media(max-width:760px){.sidebar{position:sticky;top:0;width:auto;height:auto;padding:8px 12px;display:flex;flex-direction:row;align-items:center;gap:12px;overflow:auto}.brand{padding:0;flex:none}.brand-mark{width:31px;height:31px}.brand small{display:none}.nav-label,.side-note{display:none}.side-nav{display:flex;gap:4px;white-space:nowrap}.side-nav a{font-size:12px;padding:8px}.side-nav a span{width:auto;margin-right:4px}.main{margin:0;padding:0 14px 36px}.topbar{height:48px;margin-bottom:18px}.crumb{font-size:11px}.top-status{font-size:11px}.hero{padding:0 2px 18px}.hero p{font-size:14px}.panel{padding:16px;margin-bottom:14px;border-radius:11px}.section-head{display:block}.section-head .source-badge{margin-top:10px}.grid{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.card small{font-size:10px}.cols,.live-result{grid-template-columns:1fr}.flow{gap:5px}.flow span{font-size:10px;padding:4px 6px}.flow i{display:none}.charts{grid-template-columns:1fr}.charts .box{min-width:0}.hist{min-width:680px}#histwrap{overflow-x:auto}.case-actions{align-items:stretch}.case-actions button{width:100%}.live-actions button{flex:1}.history-controls input{width:100%}}
-@media(max-width:390px){.live-actions{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.side-nav a span{display:none}.topbar{margin-bottom:15px}.panel{padding:13px}}
-@media(max-width:760px){body,.app-shell,.main{width:100vw;min-width:0;max-width:100vw;overflow-x:hidden}.sidebar{width:100vw;max-width:100vw}.panel{width:100%}.panel,.box,.section-head,.section-head>div,.row,.charts,.cols{min-width:0;max-width:100%}.topbar{min-width:0;gap:8px}.crumb{white-space:nowrap}.top-status{font-size:9px;white-space:nowrap}.section-head p{overflow-wrap:anywhere}.live-actions{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}.live-actions button{min-width:0;width:100%;padding:9px 8px;line-height:1.35}.live-actions b{grid-column:1/-1;justify-self:start;margin-top:2px;font-size:11px}}
-</style><style>
-.live-case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}.live-case{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:12px}.live-case small{color:var(--muted)}.live-case button{margin-top:auto}.live-result{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:12px}.live-result[hidden]{display:none}.live-report{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;border:1px solid var(--line);padding:14px;border-radius:8px;max-height:520px;overflow:auto}.live-state{font-size:13px;color:var(--muted)}
-@media(max-width:760px){.live-result{grid-template-columns:1fr}.live-case-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:390px){.live-case-grid{grid-template-columns:1fr}}
-</style></head><body><div class="app-shell">
-<aside class="sidebar" aria-label="Điều hướng chính">
- <div class="brand"><span class="brand-mark">D</span><span><b>D-Bot</b><small>Database diagnosis</small></span></div>
- <div class="nav-label">WORKSPACE</div><nav class="side-nav"><a href="#overview"><span>⌂</span>Tổng quan</a><a href="#live-mode"><span>◉</span>Chẩn đoán LIVE</a><a href="#offline-mode"><span>▤</span>Phát lại offline</a><a href="#history"><span>↺</span>Lịch sử báo cáo</a></nav>
- <div class="side-note"><b>Phạm vi demo</b>LIVE dùng PostgreSQL và Prometheus. Offline chỉ đọc 5 bộ JSON lịch sử.</div>
-</aside>
-<main class="main">
-<header class="topbar"><div class="crumb">DB-GPT <span aria-hidden="true">/</span> Incident Workbench</div><div class="top-status"><i class="dot"></i> Bản demo cục bộ</div></header>
-<section class="hero" id="overview"><p class="eyebrow">PostgreSQL · Incident Workbench</p><h1>Điều tra sự cố cơ sở dữ liệu</h1><p>Chạy một kịch bản LIVE trên PostgreSQL demo, hoặc phân tích lại dữ liệu lịch sử. Nguồn dữ liệu và trạng thái gọi mô hình luôn được hiển thị riêng để tránh nhầm kết quả.</p>
- <div class="mode-links"><a class="mode-link live" href="#live-mode"><span>◉</span> Tạo sự cố LIVE</a><a class="mode-link offline" href="#offline-mode"><span>▤</span> Chọn ca offline</a></div>
- <div class="flow" aria-label="Quy trình chẩn đoán"><span>1 · Cảnh báo</span><i>→</i><span>2 · Chuyên gia</span><i>→</i><span>3 · Chỉ số &amp; tri thức</span><i>→</i><span>4 · Bàn tròn</span><i>→</i><span>5 · Báo cáo</span></div>
-</section>
-<section class="panel live-panel" id="live-mode"><div class="section-head"><div><h2>Chẩn đoán LIVE · 5 kịch bản PostgreSQL</h2><p>Mỗi lượt tạo tải thật, đợi metric và alert firing, gửi bằng chứng của lượt đó qua pipeline D-Bot có LLM, rồi lưu báo cáo.</p></div><span class="source-badge"><i class="dot"></i> LIVE · PostgreSQL / Prometheus / D-Bot</span></div>
- <div class="callout"><strong>LLM:</strong> dùng model cấu hình trong `.env` qua `OPENAI_API_KEY` và `LLM_MODEL`. Mỗi lượt có thể phát sinh phí. Đáp án chuẩn không được gửi vào model; chỉ dùng để đối chiếu sau khi chẩn đoán.</div>
- <div class="box" id="livebox"><div class="row live-actions"><b id="livebadge" aria-live="polite">Đang kiểm tra…</b><button id="livestop" disabled>■ Dừng lượt LIVE</button></div><p id="livemsg" class="live-state" aria-live="polite"></p><div id="livecases" class="live-case-grid"></div><div id="livechart" class="charts"></div>
-  <div id="liveresult" class="live-result" hidden><div class="box"><h3>Đáp án chuẩn · chỉ để đối chiếu</h3><div id="livetruth"></div><small id="livemeta"></small></div><div class="box"><h3>Báo cáo D-Bot</h3><pre id="livereport" class="live-report"></pre></div></div>
-  <details class="json-disclosure"><summary>Chi tiết lượt chạy và bằng chứng LIVE</summary><pre class="json" id="livejson"></pre></details><details class="json-disclosure"><summary>Log trực tiếp</summary><pre class="json" id="livelog"></pre></details></div>
-</section>
-<section class="panel offline-panel" id="offline-mode"><div class="section-head"><div><h2>Phát lại offline · 5 ca JSON lịch sử</h2><p>Chọn một sự cố mẫu, chạy phân tích trên JSON hoặc mở lại kết quả đã lưu. Các ca này không tạo SQL và không sinh tải sống trên PostgreSQL.</p></div><span class="source-badge offline"><i class="dot"></i> OFFLINE · JSON lịch sử</span></div>
- <div class="row answers-toggle"><label><input type="checkbox" id="ans"> Hiện đáp án chuẩn</label></div><div class="grid" id="cases"></div>
- <details id="alertbox" class="hide json-disclosure"><summary>JSON cảnh báo đầu vào (gửi cho D-Bot)</summary><pre class="json" id="alertjson"></pre></details>
- <div class="row case-actions"><button class="pri" id="run" disabled>Chạy chẩn đoán trên JSON</button><button id="replay" disabled>Xem lại kết quả đã lưu</button><span class="action-note">Lượt chạy mới có thể gọi LLM; xem lại dùng dữ liệu đã lưu và không tốn phí model.</span></div>
-</section>
-<section class="panel history-panel" id="history"><div class="section-head"><div><h2>Lịch sử báo cáo</h2><p>Các báo cáo trong <code>demo_results/</code> và <code>alert_results/</code>. Chọn một dòng để mở lại đầy đủ kết quả.</p></div><span class="source-badge offline">Đã lưu · không gọi model</span></div>
- <div class="history-controls"><input id="hq" placeholder="Lọc theo model / tiêu đề…" aria-label="Lọc lịch sử báo cáo"><span id="hn"></span></div>
- <div id="histwrap"><table class="hist"><thead><tr><th>Thời gian</th><th>Kịch bản</th><th>Model / bộ</th><th>Thời lượng</th><th>Mức độ</th><th>Tiêu đề</th></tr></thead><tbody id="hist"></tbody></table></div>
-</section>
-<div id="prog" class="panel progress-panel hide"><h2>Đang chạy chẩn đoán</h2><div class="row"><b id="stage">…</b><span id="meta"></span><button id="stop">■ Dừng</button></div><div class="bar" role="progressbar" aria-label="Tiến độ chẩn đoán"><i id="bari"></i></div><div id="steps"></div><div id="err"></div><details open style="border:0;padding:0;margin-top:8px"><summary>Log trực tiếp</summary><div id="log"></div></details></div>
-<div id="res" class="panel result-panel hide"><h2>Kết quả chẩn đoán</h2><p id="rmeta" class="sub"></p><div class="cols"><div class="box"><h3>Đáp án chuẩn (nguyên nhân đã gắn nhãn)</h3><div id="truth"></div></div><div class="box"><h3>D-Bot kết luận</h3><div id="dbot"></div></div></div>
- <h3>Chuyên gia được chọn</h3><div id="experts"></div><h3>Dòng thời gian hội thoại chuyên gia</h3><div id="tl" class="tl"></div><h3>Thảo luận bàn tròn</h3><div id="rt" class="col"></div><h3>Tài liệu tri thức D-Bot đã dùng</h3><div id="kb"></div>
- <details id="ralert" class="json-disclosure"><summary>JSON cảnh báo đầu vào</summary><pre class="json"></pre></details><h3>Biểu đồ chỉ số bất thường</h3><div id="metrics" class="charts"></div><h3>Báo cáo đầy đủ</h3><div id="report"></div></div>
-</main></div><script>
-let cases=[],sel=null,timer=null;const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-async function load(){cases=await (await fetch('api/cases')).json();
- $('cases').innerHTML=cases.map(c=>`<div class="card" data-id="${c.id}"><b>${c.id}. ${esc(c.title)}</b><small>OFFLINE · chưa có tải sống</small><small>⚠ ${c.alert}: ${esc(c.alert_desc)}</small>${esc(c.desc)}<div class="ans">Đáp án: ${c.labels.map(esc).join(', ')}</div></div>`).join('');
- document.querySelectorAll('.card').forEach(e=>e.onclick=()=>pick(+e.dataset.id));renderLiveCases();
- const s=await (await fetch('api/status')).json(); if(s.running){pick(s.case);poll()}}
-function pick(id){sel=cases.find(c=>c.id==id);document.querySelectorAll('.card').forEach(e=>e.classList.toggle('sel',e.dataset.id==id));
- $('run').disabled=false;alertJ(id).then(t=>{$('alertjson').textContent=t;$('alertbox').classList.remove('hide')});$('replay').disabled=!sel.has_replay;$('replay').title=sel.has_replay?'':'Chưa có kết quả lưu sẵn'}
-$('ans').onchange=e=>$('cases').classList.toggle('show',e.target.checked);
-const fmt=s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-$('run').onclick=async()=>{const r=await fetch('api/run/'+sel.id,{method:'POST'});if(!r.ok){alert((await r.json()).detail);return}
- $('res').classList.add('hide');poll()};
-const AJ={};async function alertJ(n){return AJ[n]??=JSON.stringify(await (await fetch('api/alert/'+n)).json(),null,1)}
-let logN=0;$('stop').onclick=async()=>{$('stop').disabled=true;await fetch('api/stop',{method:'POST'});tick()};
-function poll(){logN=0;$('log').textContent='';$('stop').disabled=false;$('prog').classList.remove('hide');$('run').disabled=true;clearInterval(timer);timer=setInterval(tick,1500);tick()}
-async function tick(){const s=await (await fetch('api/status')).json(),lg=await (await fetch('api/log?since='+logN)).json();
- if(lg.lines.length){$('log').textContent+=lg.lines.join('\n')+'\n';$('log').scrollTop=1e9}logN=lg.n;
- $('stop').classList.toggle('hide',!s.running);
- $('stage').textContent=s.stage||'Khởi động…';$('meta').textContent=`⏱ ${fmt(s.elapsed||0)} · ${s.llm_calls} lần gọi LLM`;
- $('bari').style.width=(s.progress||0)+'%';
- $('steps').innerHTML=s.steps.map(x=>`<div>[${fmt(x.t)}] ${esc(x.text)}</div>`).join('');$('steps').scrollTop=1e9;
- $('err').innerHTML=s.error?`<p class="err">✖ ${esc(s.error)}</p>`:s.stopped&&!s.running?'<p class="err">■ Đã dừng. Có thể chạy lại.</p>':'';
- if(!s.running){clearInterval(timer);$('run').disabled=false;if(s.result){sel.has_replay=true;$('replay').disabled=false;show(s.result,false);loadHist()}}}
-$('replay').onclick=async()=>{const r=await fetch('api/replay/'+sel.id);if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}};
-function rootCause(md){const m=md.match(/\|\s*Root Cause\s*\|(.*)\|\s*$/m);if(!m)return '';
- const L=m[1].split('<br>').map(s=>s.trim()).filter(Boolean),out=[],clean=s=>s.replace(/\*\*/g,'').replace(/\[\d+\]/g,'').replace(/[:.\s]+$/,'').trim();
- const head=s=>/root cause|analysis|report|conclusion/i.test(s)&&s.length<40;
- for(const [i,s] of L.entries()){let b;
-  if(/^\w+Expert\b/.test(s))out.push(`<b>${esc(s.split(' ')[0])}</b>`);
-  else if((b=s.match(/^(?:[-*]|\d+\.)\s*\*\*(.+?)\*\*/))&&!head(b[1]))out.push(`<div>• ${esc(clean(b[1]))}</div>`);
-  else if(/^\d+\.\s/.test(s)&&s.length<120)out.push(`<div>• ${esc(clean(s.replace(/^\d+\.\s*/,'')))}</div>`);
-  else if(s.length<80&&!/^[-*]/.test(s)&&!head(clean(s))&&/^-/.test(L[i+1]||''))out.push(`<div>• ${esc(clean(s))}</div>`)}
- return out.join('')}
-function spark(v){const w=220,h=50,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1;
- return `<svg width="${w}" height="${h}"><polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>`${i*w/(v.length-1)},${h-4-(y-mn)/k*(h-8)}`).join(' ')}"/></svg>`}
-function chart(m){const v=m.values,w=320,h=140,L=40,B=18,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1,n=v.length-1||1,f=x=>+x.toPrecision(3);
- const X=i=>L+i*(w-L-6)/n,Y=y=>h-B-(y-mn)/k*(h-B-8),ti=esc(m.title.replace(/\s*\(for .*\)/,'')),who=(m.title.match(/\(for (.*)\)/)||[])[1]||'';
- return `<div class="box" style="padding:8px"><small><b>${ti}</b>${who?' · '+esc(who):''}</small><svg width="100%" viewBox="0 0 ${w} ${h}"><line x1="${L}" y1="${h-B}" x2="${w}" y2="${h-B}" stroke="#000"/><line x1="${L}" y1="0" x2="${L}" y2="${h-B}" stroke="#000"/>
- <text x="${L-3}" y="12" text-anchor="end">${f(mx)}</text><text x="${L-3}" y="${h-B}" text-anchor="end">${f(mn)}</text><text x="${L}" y="${h-4}">0</text><text x="${w-4}" y="${h-4}" text-anchor="end">${v.length} mẫu</text>
- <polyline fill="none" stroke="#000" stroke-width="1.5" points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}"/></svg></div>`}
-const md=t=>`<div class="md">${marked.parse(String(t||''))}</div>`;
-function msgs(list,open){return (list||[]).map((m,i)=>`<details${open&&i==list.length-1?' open':''}><summary>${m.time?'['+esc(m.time)+'] ':''}${m.sender?esc(m.sender)+': ':''}${esc(String(m.data||'').replace(/<[^>]*>/g,' ').replace(/[#*`|]/g,'').slice(0,70))}…</summary>${md(m.data)}</details>`).join('')||'<details><summary>(trống)</summary></details>'}
-function timeline(rec){const a=rec.anomalyAnalysis||{};
- $('tl').innerHTML=Object.entries(a).filter(([k,v])=>(v.messages||[]).length).map(([k,v])=>`<div class="col"><b>${esc(k)} · ${(v.messages||[]).length} bước</b>${msgs(v.messages,true)}</div>`).join('')||'<i>Không có</i>';
- const b=(rec.brainstorming||{}).messages||[];$('rt').innerHTML=`<b>${b.length} lượt phát biểu</b>`+msgs(b,false)}
-async function loadHist(){H=await (await fetch('api/history')).json();drawHist()}
-let H=[];function drawHist(){const q=$('hq').value.toLowerCase(),L=H.filter(x=>(x.model+' '+x.set+' '+x.title).toLowerCase().includes(q));$('hn').textContent=L.length+' / '+H.length+' báo cáo';
- $('hist').innerHTML=L.map(x=>`<tr data-id="${esc(x.id)}"><td>${x.time?new Date(x.time*1000).toLocaleString('vi-VN'):'–'}</td><td>${x.case?'Ca '+x.case:'–'}</td><td>${esc(x.model)}${x.set?' <small>('+esc(x.set)+')</small>':''}</td><td>${x.elapsed?fmt(x.elapsed):'–'}</td><td>${esc((x.severity||[]).join(', ')||'–')}</td><td>${esc(x.title.slice(0,80))}</td></tr>`).join('');
- document.querySelectorAll('#hist tr').forEach(e=>e.onclick=async()=>{const r=await fetch('api/result?id='+encodeURIComponent(e.dataset.id));if(r.ok){$('prog').classList.add('hide');show(await r.json(),true)}})}
-$('hq').oninput=drawHist;
-function show(r,isReplay){const c=cases.find(x=>x.id==r.case)||{title:r.record.title||'Báo cáo gốc',labels:['(không có đáp án cho bản ghi này)']},rec=r.record;$('res').classList.remove('hide');
- $('rmeta').textContent=`${r.case?'Kịch bản '+r.case+': ':''}${c.title} · ${isReplay?'Xem lại kết quả đã chạy lúc '+new Date(r.finished_at*1000).toLocaleString('vi-VN'):'Vừa chạy xong'} · ${r.elapsed!=null?'mất '+fmt(r.elapsed)+' · ':''}${r.llm_calls!=null?r.llm_calls+' lần gọi LLM':''}${r.model?' · model '+r.model:''}`;
- $('truth').innerHTML=c.labels.map(l=>`<span class="tag">${esc(l)}</span>`).join('');
- $('dbot').innerHTML=rootCause(rec.report||'')||'<i>(xem báo cáo bên dưới)</i>';
- const kb=r.knowledge||[];$('kb').innerHTML=kb.length?`<table class="hist"><tr><th>Chuyên gia</th><th>Nguyên nhân / kho</th><th>Điểm</th><th>Nội dung</th></tr>${kb.map(k=>`<tr><td>${esc(k.expert||'–')}</td><td>${esc(k.cause||'–')}${k.kb?'<br><small>'+esc(k.kb)+'</small>':''}</td><td>${k.score??'–'}</td><td>${esc(k.desc)}</td></tr>`).join('')}</table>`:'<i>Không có dữ liệu</i>';
- $('ralert').classList.toggle('hide',!r.case);if(r.case)alertJ(r.case).then(t=>$('ralert').querySelector('pre').textContent=t);
- timeline(rec);$('experts').innerHTML=(r.experts||[]).map(e=>`<span class="tag">${esc(e)}</span>`).join('');
- const tm=r.metrics||[];
- $('metrics').innerHTML=tm.map(chart).join('')||'<i>Không có</i>';
- $('report').innerHTML=marked.parse(rec.report||'');$('res').scrollIntoView({behavior:'smooth'})}
-let liveConfig={llm_ready:false,model:''},livePoll=null,liveActive=false;
-async function renderLiveCases(){try{liveConfig=await(await fetch('/api/live/run/config')).json()}catch(e){liveConfig={llm_ready:false,model:''}}
- $('livecases').innerHTML=cases.map(c=>`<div class="live-case"><b>${c.id}. ${esc(c.title)}</b><small>LIVE · ${esc(c.alert)}</small><small>${esc(c.desc)}</small><button class="pri" data-live="${c.id}" ${liveConfig.llm_ready?'':'disabled'}>Chạy LIVE + D-Bot</button></div>`).join('');
- document.querySelectorAll('[data-live]').forEach(b=>b.onclick=()=>startLive(+b.dataset.live));
- $('livemsg').textContent=liveConfig.llm_ready?`LLM sẵn sàng · ${liveConfig.model||'model cấu hình'}. Mỗi lượt chạy pipeline D-Bot.`:(liveConfig.llm_enabled?'Thiếu DEMO_LLM_API_KEY trong .env; chưa thể chạy E2E có LLM.':'Bật DEMO_LLM_ENABLED và cấu hình DEMO_LLM_API_KEY trong .env để chạy LIVE + D-Bot.')}
-function scenarioChart(trace){const sig=(trace&&trace.signal)||{},samples=sig.samples||[];if(!samples.length)return '';
- const v=samples.flatMap(x=>x.values||[]).map(Number).filter(Number.isFinite);if(!v.length)return '';
- const w=320,h=140,L=44,B=18,mx=Math.max(...v),mn=Math.min(...v),k=(mx-mn)||1,n=v.length-1||1,X=i=>L+i*(w-L-6)/n,Y=y=>h-B-(y-mn)/k*(h-B-8);
- return `<div class="box" style="padding:8px"><small><b>${esc(trace.metric||'metric')}</b> · metric Prometheus quan sát được</small><svg width="100%" viewBox="0 0 ${w} ${h}"><line x1="${L}" y1="${h-B}" x2="${w}" y2="${h-B}" stroke="#000"/><line x1="${L}" y1="0" x2="${L}" y2="${h-B}" stroke="#000"/><text x="${L-3}" y="12" text-anchor="end">${mx}</text><text x="${L-3}" y="${h-B}" text-anchor="end">${mn}</text><polyline fill="none" stroke="#087e8b" stroke-width="2" points="${v.map((y,i)=>X(i)+','+Y(y)).join(' ')}"/></svg></div>`}
-async function startLive(id){const r=await fetch(`/api/live/run/${id}?diagnose=true`,{method:'POST'});if(!r.ok){let e={};try{e=await r.json()}catch(_){}$('livemsg').textContent=e.detail||'Không khởi động được lượt LIVE';return}
- liveActive=true;$('liveresult').hidden=true;$('livechart').innerHTML='';$('livejson').textContent='';$('livelog').textContent='';$('livestop').disabled=false;$('livebadge').textContent='Đang khởi động';$('livemsg').textContent=`Ca ${id}: tạo workload → đợi alert → chẩn đoán bằng D-Bot…`;
- clearInterval(livePoll);livePoll=setInterval(liveTick,1500);liveTick()}
-async function liveTick(){let s;try{s=await(await fetch('/api/live/run/state')).json()}catch(e){s={running:false,error:String(e)}}
- $('livelog').textContent=(s.log||[]).slice(-80).join('\n');$('livelog').scrollTop=$('livelog').scrollHeight;
- $('livebadge').textContent=s.running?`Ca ${s.case||''} · ${s.scenario||''} · đang chạy`:(s.trace?(s.trace.diagnosis&&s.trace.diagnosis.report?'E2E hoàn tất':'Đã kết thúc'):'Sẵn sàng');
- $('livestop').disabled=!s.running;$('livecases').querySelectorAll('[data-live]').forEach(b=>b.disabled=!!s.running||!liveConfig.llm_ready);
- if(s.trace){const t=s.trace,d=t.diagnosis||{};$('livechart').innerHTML=scenarioChart(t);$('liveresult').hidden=false;
-  const c=cases.find(x=>x.id==s.case);$('livetruth').innerHTML=c?c.labels.map(x=>`<span class="tag">${esc(x)}</span>`).join(''):'–';
-  $('livemeta').textContent=`run_id: ${s.run_id||'–'} · model: ${d.model||liveConfig.model||'–'} · LLM: ${d.llm_calls||0} lượt gọi · artifact: ${d.result_file||'chưa có'}`;
-  $('livereport').textContent=d.report||t.error||'Không có báo cáo; xem lỗi và log.';$('livejson').textContent=JSON.stringify({scenario:t.scenario,metric:t.metric,threshold:t.threshold,signal:t.signal,prometheus_alert:t.prometheus_alert,webhook:t.webhook,diagnosis:{returncode:d.returncode,llm_calls:d.llm_calls,result_file:d.result_file},cleanup:t.cleanup,error:t.error},null,2)}
- else if(s.error)$('livemsg').textContent=s.error;
- if(!s.running&&liveActive){liveActive=false;clearInterval(livePoll);livePoll=null;$('livestop').disabled=true;renderLiveCases();if(!s.trace)$('livemsg').textContent=s.error||'Lượt LIVE kết thúc nhưng chưa có trace.'}}
-$('livestop').onclick=async()=>{const r=await fetch('/api/live/run/stop',{method:'POST'});if(!r.ok){$('livemsg').textContent='Không dừng được lượt LIVE.';return}$('livemsg').textContent='Đang dừng workload và dọn dữ liệu…'};
-renderLiveCases();
-loadHist();load().then(()=>{const h=location.hash.match(/(case|replay)=(\d)/);if(h&&!sel){pick(+h[2]);if(h[1]=='replay')$('replay').click()}});
-</script></body></html>
+<!doctype html>
+<!-- AI/frontend maintainers: read demo/AGENTS.md before editing this file. It defines the LIVE-first workflow, lazy-load boundaries, semantic contract, and stable selectors. -->
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 rx=%229%22 fill=%22%231d4ed8%22/%3E%3Ctext x=%228%22 y=%2228%22 fill=%22white%22 font-size=%2219%22 font-family=%22sans-serif%22 font-weight=%22700%22%3EDB%3C/text%3E%3C/svg%3E">
+  <title>D-Bot · Chẩn đoán PostgreSQL E2E</title>
+  <link href="/assets/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --dbot-bg: #f4f7fb;
+      --dbot-surface: #fff;
+      --dbot-border: #dce3ec;
+      --dbot-ink: #172033;
+      --dbot-muted: #657084;
+      --dbot-primary: #1d4ed8;
+      --dbot-primary-soft: #eef4ff;
+      --dbot-success: #198754;
+      --dbot-success-soft: #eaf8f0;
+      --dbot-warning-soft: #fff8e7;
+      --dbot-danger-soft: #fff0ef;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { min-height: 100vh; background: var(--dbot-bg); color: var(--dbot-ink); }
+    button, [role="button"] { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 3px solid rgba(29, 78, 216, .28);
+      outline-offset: 2px;
+    }
+    .app-shell { max-width: 1240px; }
+    .brand-mark {
+      display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px;
+      background: var(--dbot-primary); color: #fff; font-weight: 800; letter-spacing: -.04em;
+    }
+    .surface {
+      border: 1px solid var(--dbot-border); border-radius: 1rem; background: var(--dbot-surface);
+      box-shadow: 0 10px 30px rgba(30, 52, 82, .05);
+    }
+    .eyebrow {
+      color: var(--dbot-primary); font-size: .75rem; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .text-secondary-emphasis { color: var(--dbot-muted) !important; }
+    .nav-tabs { gap: .25rem; border-bottom-color: var(--dbot-border); }
+    .nav-tabs .nav-link {
+      border: 0; border-bottom: 3px solid transparent; color: var(--dbot-muted); font-weight: 700;
+      background: transparent;
+    }
+    .nav-tabs .nav-link:hover { border-bottom-color: #b8c5d8; color: var(--dbot-ink); }
+    .nav-tabs .nav-link.active { border-bottom-color: var(--dbot-primary); color: var(--dbot-primary); }
+    .status-strip { border-left: 4px solid var(--dbot-success); background: var(--dbot-success-soft); }
+    .status-strip.is-unavailable { border-left-color: #b45309; background: var(--dbot-warning-soft); }
+    .status-strip.is-error { border-left-color: #b42318; background: var(--dbot-danger-soft); }
+    .scenario-option { position: relative; }
+    .scenario-option .form-check-input { position: absolute; top: 1.1rem; right: 1.1rem; z-index: 2; margin: 0; }
+    .scenario-card {
+      display: block; min-height: 100%; border: 1px solid var(--dbot-border); border-radius: .9rem;
+      background: #fff; cursor: pointer; transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .scenario-card:hover { border-color: #8ea7cb; box-shadow: 0 8px 22px rgba(44, 71, 110, .08); }
+    .scenario-option .form-check-input:checked + .scenario-card {
+      border-color: var(--dbot-primary); background: var(--dbot-primary-soft);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, .12);
+    }
+    .scenario-option .form-check-input:focus-visible + .scenario-card {
+      outline: 3px solid rgba(29, 78, 216, .28); outline-offset: 2px;
+    }
+    .scenario-code { color: var(--dbot-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .77rem; }
+    .workflow {
+      --step-size: 2rem; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+      margin: 0; padding: 0; list-style: none;
+    }
+    .workflow-step { position: relative; min-width: 0; padding: 0 .35rem; text-align: center; }
+    .workflow-step:not(:last-child)::after {
+      position: absolute; top: calc(var(--step-size) / 2 - 1px); left: calc(50% + var(--step-size) / 2);
+      width: calc(100% - var(--step-size)); height: 2px; background: #d8e0eb; content: "";
+    }
+    .workflow-step.is-complete:not(:last-child)::after { background: var(--dbot-success); }
+    .workflow-marker {
+      position: relative; z-index: 1; display: grid; width: var(--step-size); height: var(--step-size);
+      margin: 0 auto .55rem; place-items: center; border: 2px solid #c7d1df; border-radius: 999px;
+      background: #fff; color: var(--dbot-muted); font-size: .8rem; font-weight: 800;
+    }
+    .workflow-step.is-complete .workflow-marker { border-color: var(--dbot-success); background: var(--dbot-success); color: #fff; }
+    .workflow-step.is-current .workflow-marker {
+      border-color: var(--dbot-primary); background: var(--dbot-primary); color: #fff;
+      box-shadow: 0 0 0 5px rgba(29, 78, 216, .12);
+    }
+    .workflow-label { display: block; color: var(--dbot-muted); font-size: .78rem; font-weight: 700; line-height: 1.25; }
+    .workflow-step.is-current .workflow-label, .workflow-step.is-complete .workflow-label { color: var(--dbot-ink); }
+    .report-panel { border-left: 4px solid var(--dbot-primary); background: #f8faff; }
+    .technical-details summary, .consultation-transcript summary { cursor: pointer; font-weight: 700; }
+    .technical-code, .report-pre {
+      overflow: auto; border-radius: .75rem; background: #111827; color: #dbeafe;
+      font: .8rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .report-pre { max-height: 34rem; }
+    .participant-list, .consultation-meta { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .participant-list {
+      padding: .75rem 1rem; border: 1px solid var(--dbot-border); border-radius: .75rem;
+      background: #f8fafc; color: var(--dbot-muted); font-size: .82rem; font-weight: 700;
+    }
+    .participant-list > span { display: inline-flex; align-items: center; gap: .4rem; }
+    .participant-dot { width: .55rem; height: .55rem; border-radius: 999px; background: var(--dbot-primary); }
+    .chat-thread { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+    .chat-message { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; align-items: start; }
+    .bot-avatar {
+      display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border-radius: .8rem;
+      background: var(--dbot-primary); color: #fff; font-size: .7rem; font-weight: 800;
+    }
+    .chat-message:nth-child(3n+1) .bot-avatar { background: #0f766e; }
+    .chat-message:nth-child(3n+2) .bot-avatar { background: #6d28d9; }
+    .chat-message:nth-child(3n) .bot-avatar { background: #b45309; }
+    .chat-bubble { max-width: 54rem; padding: .9rem 1rem; border: 1px solid var(--dbot-border); border-radius: .25rem .9rem .9rem; background: #fff; }
+    .chat-message-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .35rem; }
+    .chat-message-head time { color: var(--dbot-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+    .chat-message-text { margin: 0; white-space: pre-wrap; }
+    .bot-role { display: block; color: var(--dbot-muted); font-size: .75rem; font-weight: 500; }
+    .consensus-card {
+      padding: 1rem; border: 1px solid #9dd5b3; border-left: 4px solid var(--dbot-success);
+      border-radius: .75rem; background: var(--dbot-success-soft);
+    }
+    .source-live { color: #146c43; background: #d1e7dd; }
+    .source-offline { color: #664d03; background: #fff3cd; }
+    .loading-state, .empty-state, .error-state { padding: 2rem; border: 1px dashed #b9c6d8; border-radius: .75rem; text-align: center; color: var(--dbot-muted); }
+    .error-state { border-color: #e6aaa4; color: #8d2017; background: var(--dbot-danger-soft); }
+    .history-table th, .history-table td { vertical-align: middle; }
+    .history-table td { overflow-wrap: anywhere; }
+    .result-root-causes { margin-bottom: 0; padding-left: 1.15rem; }
+
+    @media (max-width: 767.98px) {
+      header .app-shell { flex-wrap: wrap; }
+      .workflow { display: block; }
+      .workflow-step { display: grid; grid-template-columns: var(--step-size) 1fr; min-height: 3.25rem; gap: .75rem; padding: 0; text-align: left; }
+      .workflow-step:not(:last-child)::after { top: var(--step-size); left: calc(var(--step-size) / 2 - 1px); width: 2px; height: calc(100% - var(--step-size)); }
+      .workflow-marker { margin: 0; }
+      .workflow-label { padding-top: .35rem; font-size: .9rem; }
+      .chat-message { grid-template-columns: 2.25rem minmax(0, 1fr); gap: .6rem; }
+      .bot-avatar { width: 2.25rem; height: 2.25rem; border-radius: .7rem; }
+      .chat-message-head { display: block; }
+      .chat-message-head time { display: block; margin-top: .1rem; }
+      .table-responsive { border: 1px solid var(--dbot-border); border-radius: .75rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="bg-white border-bottom">
+    <div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-mark" aria-hidden="true">DB</div>
+        <div><h1 class="h5 fw-bold lh-sm mb-1">D-Bot · Chẩn đoán PostgreSQL E2E</h1><div class="small text-secondary-emphasis">LIVE trước · Bằng chứng rõ · Cleanup được xác nhận</div></div>
+      </div>
+      <span class="badge text-bg-light border">Incident Workbench</span>
+    </div>
+  </header>
+
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot">
+      <div class="nav nav-tabs mb-4" role="tablist" aria-label="Chọn chế độ chẩn đoán">
+        <button id="tab-live" class="nav-link active" type="button" role="tab" aria-selected="true" aria-controls="panel-live" tabindex="0" data-testid="tab-live">LIVE</button>
+        <button id="tab-offline" class="nav-link" type="button" role="tab" aria-selected="false" aria-controls="panel-offline" tabindex="-1" data-testid="tab-offline">Offline</button>
+        <button id="tab-history" class="nav-link" type="button" role="tab" aria-selected="false" aria-controls="panel-history" tabindex="-1" data-testid="tab-history">Lịch sử</button>
+      </div>
+    </nav>
+
+    <section id="panel-live" role="tabpanel" aria-labelledby="tab-live" tabindex="0">
+      <section id="live-status" class="status-strip surface p-3 p-md-4 mb-4" aria-labelledby="live-status-title" data-testid="live-status">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+          <div>
+            <div class="eyebrow mb-2">LIVE · PostgreSQL / Prometheus / D-Bot</div>
+            <h2 id="live-status-title" class="h3 mb-2">Đang kiểm tra môi trường</h2>
+            <p id="live-status-message" class="mb-0 text-secondary-emphasis" role="status" aria-live="polite">Đang tải cấu hình LIVE…</p>
+          </div>
+          <div id="live-environment" class="d-flex flex-wrap gap-2 align-self-lg-start" aria-label="Trạng thái môi trường"></div>
+        </div>
+      </section>
+
+      <section class="surface p-3 p-md-4 mb-4" aria-labelledby="live-scenario-title">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+          <div><div class="eyebrow mb-2">Bước 1</div><h2 id="live-scenario-title" class="h4 mb-1">Chọn kịch bản cần kiểm tra</h2><p class="text-secondary-emphasis mb-0">Chọn kịch bản chỉ cập nhật phạm vi. Workload chưa chạy cho tới khi bạn bấm nút xác nhận.</p></div>
+          <span class="badge text-bg-light border align-self-start">Mỗi lần một kịch bản</span>
+        </div>
+        <fieldset id="live-scenarios" class="row g-3 border-0 p-0 m-0" aria-describedby="live-selection-note">
+          <legend class="visually-hidden">Năm kịch bản PostgreSQL LIVE</legend>
+          <div class="loading-state">Đang tải danh sách kịch bản…</div>
+        </fieldset>
+        <div class="row g-3 mt-2 align-items-stretch">
+          <div class="col-lg-8">
+            <div id="live-selection-summary" class="h-100 rounded border bg-light p-3 text-secondary-emphasis">Chọn một kịch bản để xem phạm vi lượt chạy.</div>
+          </div>
+          <div class="col-lg-4">
+            <div class="h-100 rounded border p-3">
+              <div class="eyebrow mb-2">Bước 2</div>
+              <p id="live-selection-note" class="small text-secondary-emphasis">Mỗi lượt tạo workload thật, gọi model đã cấu hình và có thể phát sinh phí.</p>
+              <button id="run-live" class="btn btn-primary btn-lg w-100" type="button" disabled data-testid="run-live">Bắt đầu chẩn đoán</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="live-run" class="surface p-3 p-md-4 mb-4" aria-labelledby="live-run-title" data-testid="live-run" aria-busy="false" hidden>
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+          <div><div id="live-run-eyebrow" class="eyebrow mb-2">LIVE</div><h2 id="live-run-title" class="h4 mb-1">Đang chạy</h2><p id="live-run-message" class="text-secondary-emphasis mb-0">Đang khởi tạo workload…</p></div>
+          <div class="text-lg-end"><div id="live-run-id" class="font-monospace fw-semibold mb-2" data-testid="live-run-id"></div><button id="stop-live" class="btn btn-outline-danger" type="button" data-testid="stop-live">Dừng và cleanup</button></div>
+        </div>
+        <div class="progress mb-4" role="progressbar" aria-label="Tiến độ workflow LIVE" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="height:.65rem"><div id="live-progress-bar" class="progress-bar" style="width:0"></div></div>
+        <ol id="live-workflow" class="workflow" aria-label="Các bước chẩn đoán LIVE" data-testid="live-workflow"></ol>
+        <div class="small text-secondary-emphasis mt-3">Cập nhật lần cuối: <span id="live-last-update">–</span></div>
+        <details class="technical-details mt-4"><summary>Log trực tiếp</summary><pre id="live-log" class="technical-code p-3 mt-3 mb-0"></pre></details>
+      </section>
+
+      <section id="live-result" class="surface p-3 p-md-4 mb-4" aria-labelledby="live-result-title" data-testid="live-result" hidden>
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+          <div><div id="live-result-eyebrow" class="eyebrow mb-2">LIVE · Kết quả</div><h2 id="live-result-title" class="h3 mb-2">Kết quả lượt chạy</h2><p id="live-result-message" class="text-secondary-emphasis mb-0"></p></div>
+          <span id="live-result-badge" class="badge fs-6 align-self-start"></span>
+        </div>
+        <div class="row g-4 mb-4">
+          <section class="col-lg-7" aria-labelledby="live-diagnosis-title"><div class="report-panel rounded p-3 p-md-4 h-100"><div class="eyebrow mb-2">Kết luận D-Bot</div><h3 id="live-diagnosis-title" class="h4">Nguyên nhân phù hợp nhất</h3><ul id="live-root-causes" class="result-root-causes"></ul></div></section>
+          <section class="col-lg-5" aria-labelledby="live-evidence-title"><div class="rounded border p-3 p-md-4 h-100"><div class="eyebrow mb-2">Bằng chứng chính</div><h3 id="live-evidence-title" class="h5">Điều kiện E2E</h3><div id="live-evidence" class="list-group list-group-flush"></div></div></section>
+        </div>
+        <section id="live-consultation" class="rounded border p-3 p-md-4 mb-4" aria-labelledby="live-consultation-title" data-testid="consultation-summary">
+          <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3"><div><div class="eyebrow mb-2">Hội chẩn đa bot</div><h3 id="live-consultation-title" class="h4 mb-1">Hội thoại trước khi chốt báo cáo</h3><p class="text-secondary-emphasis mb-0">Chỉ hiển thị tin nhắn thực sự được trao đổi trong phiên hội chẩn.</p></div><div id="live-consultation-meta" class="consultation-meta align-self-lg-start"></div></div>
+          <div id="live-consultation-body"></div>
+        </section>
+        <details class="technical-details rounded border p-3 mb-4"><summary>Đáp án chuẩn · chỉ dùng để đối chiếu sau khi LIVE hoàn tất</summary><div id="live-ground-truth" class="pt-3"></div></details>
+        <details class="technical-details rounded border p-3 mb-4" open><summary>Báo cáo D-Bot đầy đủ</summary><pre id="live-report-text" class="report-pre p-3 mt-3 mb-0"></pre></details>
+        <details id="technical-details" class="technical-details rounded border p-3" data-testid="technical-details"><summary>Trace, metric và metadata</summary><div id="live-technical" class="pt-3"></div></details>
+      </section>
+    </section>
+
+    <section id="panel-offline" role="tabpanel" aria-labelledby="tab-offline" tabindex="0" hidden inert>
+      <section class="surface p-3 p-md-4 mb-4" aria-labelledby="offline-title">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4"><div><div class="eyebrow mb-2">Offline replay</div><h2 id="offline-title" class="h3 mb-2">Phân tích dữ liệu cảnh báo đã lưu</h2><p class="text-secondary-emphasis mb-0">Chế độ này không tạo workload PostgreSQL. Danh sách chỉ tải khi mở tab.</p></div><span class="badge source-offline align-self-start">Không phải LIVE</span></div>
+        <div id="offline-content" class="loading-state" role="status">Đang tải năm ca Offline…</div>
+      </section>
+      <section id="offline-progress" class="surface p-3 p-md-4 mb-4" aria-labelledby="offline-progress-title" hidden>
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3"><div><div class="eyebrow mb-2">Offline · Đang xử lý</div><h2 id="offline-progress-title" class="h4">D-Bot đang phân tích JSON</h2><p id="offline-stage" class="text-secondary-emphasis mb-0"></p></div><button id="stop-offline" class="btn btn-outline-danger align-self-lg-start" type="button">Dừng phân tích</button></div>
+        <div class="progress my-4" role="progressbar" aria-label="Tiến độ phân tích Offline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="offline-progress-bar" class="progress-bar" style="width:0"></div></div>
+        <div id="offline-steps" class="small"></div>
+        <div id="offline-error" class="mt-3"></div>
+        <details class="technical-details mt-3"><summary>Log trực tiếp</summary><pre id="offline-log" class="technical-code p-3 mt-3 mb-0"></pre></details>
+      </section>
+      <section id="offline-result" class="surface p-3 p-md-4 mb-4" aria-label="Kết quả Offline" hidden></section>
+    </section>
+
+    <section id="panel-history" role="tabpanel" aria-labelledby="tab-history" tabindex="0" hidden inert>
+      <section class="surface p-3 p-md-4 mb-4" aria-labelledby="history-title">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4"><div><div class="eyebrow mb-2">Báo cáo đã lưu</div><h2 id="history-title" class="h3 mb-2">Lịch sử chẩn đoán</h2><p class="text-secondary-emphasis mb-0">Tra cứu kết quả LIVE và Offline. Mỗi trang hiển thị tối đa 25 báo cáo.</p></div><span id="history-total" class="badge text-bg-light border align-self-start">–</span></div>
+        <form id="history-form" class="row g-3 align-items-end mb-4">
+          <div class="col-md-8"><label class="form-label" for="history-query">Tìm báo cáo</label><input id="history-query" class="form-control" type="search" placeholder="Tên kịch bản, model hoặc nguồn"></div>
+          <div class="col-md-4"><button class="btn btn-primary w-100" type="submit">Áp dụng bộ lọc</button></div>
+        </form>
+        <div id="history-content" class="loading-state" role="status">Đang tải lịch sử…</div>
+        <nav id="history-pagination" class="d-flex justify-content-between align-items-center gap-3 mt-3" aria-label="Phân trang lịch sử" hidden><button id="history-prev" class="btn btn-outline-secondary" type="button">Trang trước</button><span id="history-page" class="small text-secondary-emphasis"></span><button id="history-next" class="btn btn-outline-secondary" type="button">Trang sau</button></nav>
+      </section>
+      <section id="history-result" class="surface p-3 p-md-4 mb-4" aria-label="Báo cáo đã chọn" hidden></section>
+    </section>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const fmt = seconds => `${Math.floor(Number(seconds || 0) / 60)}:${String(Math.round(Number(seconds || 0)) % 60).padStart(2, '0')}`;
+    const LIVE_STEPS = ['Workload', 'Metric', 'Alert', 'Webhook', 'D-Bot', 'Report', 'Cleanup'];
+    const BOT_ROLES = {WorkloadExpert:'Phân tích workload', QueryExpert:'Chuyên gia truy vấn', CpuExpert:'Phân tích CPU', MemoryExpert:'Phân tích bộ nhớ', 'D-Bot':'Điều phối kết luận'};
+
+    let activeTab = 'live';
+    let liveConfig = {llm_ready:false, llm_enabled:false, model:'', scenarios:[]};
+    let liveSelected = null;
+    let livePoll = null;
+    let liveStopping = false;
+    let offlineLoaded = false;
+    let offlineCases = [];
+    let offlineSelected = null;
+    let offlinePoll = null;
+    let offlineLogN = 0;
+    let historyLoaded = false;
+    let historyPage = 1;
+    let historyPages = 1;
+
+    function setTab(name, focus = true) {
+      activeTab = name;
+      ['live', 'offline', 'history'].forEach(tabName => {
+        const tab = $(`tab-${tabName}`);
+        const panel = $(`panel-${tabName}`);
+        const active = tabName === name;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        panel.hidden = !active;
+        panel.toggleAttribute('inert', !active);
+      });
+      if (focus) $(`tab-${name}`).focus();
+      if (name === 'offline' && !offlineLoaded) loadOffline();
+      if (name === 'history' && !historyLoaded) loadHistory(1);
+    }
+
+    document.querySelectorAll('[role="tab"]').forEach((tab, index, tabs) => {
+      tab.addEventListener('click', () => setTab(tab.id.replace('tab-', ''), false));
+      tab.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        let next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 :
+          (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+        setTab(tabs[next].id.replace('tab-', ''));
+      });
+    });
+
+    function selectedLiveScenario() {
+      return liveConfig.scenarios.find(item => item.case === liveSelected);
+    }
+
+    function renderLiveScenarios() {
+      if (!liveConfig.scenarios.length) {
+        $('live-scenarios').innerHTML = '<div class="error-state">Không tải được danh sách kịch bản LIVE.</div>';
+        return;
+      }
+      if (!liveSelected) liveSelected = liveConfig.scenarios.find(item => item.case === 4)?.case || liveConfig.scenarios[0].case;
+      $('live-scenarios').innerHTML = liveConfig.scenarios.map(item => `
+        <div class="col-md-6 col-xl-4 scenario-option">
+          <input class="form-check-input" type="radio" name="live-scenario" id="scenario-${esc(item.scenario)}" value="${item.case}" ${item.case === liveSelected ? 'checked' : ''} data-testid="scenario-${esc(item.scenario)}">
+          <label class="scenario-card p-3" for="scenario-${esc(item.scenario)}">
+            <span class="badge text-bg-light border mb-2">0${item.case}</span>
+            <span class="d-block fw-bold pe-4">${esc(item.title)}</span>
+            <span class="d-block small text-secondary-emphasis mt-2">${esc(item.desc)}</span>
+            <span class="scenario-code d-block mt-3">${esc(item.scenario)} · ${esc(item.alert)}</span>
+          </label>
+        </div>`).join('');
+      document.querySelectorAll('input[name="live-scenario"]').forEach(input => input.addEventListener('change', event => {
+        liveSelected = Number(event.target.value);
+        renderLiveSelection();
+      }));
+      renderLiveSelection();
+    }
+
+    function renderLiveSelection() {
+      const scenario = selectedLiveScenario();
+      if (!scenario) return;
+      $('live-selection-summary').innerHTML = `<strong>${esc(scenario.title)}</strong><div class="small mt-2">Alert dự kiến: <span class="font-monospace">${esc(scenario.alert)}</span></div><div class="small mt-1">Phạm vi: tạo workload PostgreSQL demo, chờ metric/alert/webhook, gọi D-Bot rồi cleanup.</div>`;
+      $('run-live').disabled = !liveConfig.llm_ready || Boolean(document.querySelector('#live-run[aria-busy="true"]'));
+      $('run-live').setAttribute('aria-label', `Bắt đầu chẩn đoán LIVE: ${scenario.title}`);
+    }
+
+    function setLiveReadyState() {
+      const ready = liveConfig.llm_ready;
+      $('live-status').classList.toggle('is-unavailable', !ready);
+      $('live-status-title').textContent = ready ? 'Hệ thống sẵn sàng' : 'LIVE chưa sẵn sàng';
+      $('live-status-message').textContent = ready ? `Model ${liveConfig.model || 'đã cấu hình'} sẵn sàng. Chọn kịch bản và xác nhận lượt chạy.` :
+        (liveConfig.llm_enabled ? 'Thiếu DEMO_LLM_API_KEY; chưa thể chạy E2E có LLM.' : 'Bật DEMO_LLM_ENABLED và cấu hình DEMO_LLM_API_KEY để chạy LIVE + D-Bot.');
+      $('live-environment').innerHTML = `<span class="badge text-bg-light border">PostgreSQL · demo</span><span class="badge text-bg-light border">Prometheus · theo dõi</span><span class="badge ${ready ? 'text-bg-success' : 'text-bg-warning'}">LLM · ${ready ? 'Sẵn sàng' : 'Chưa sẵn sàng'}</span>`;
+      renderLiveSelection();
+    }
+
+    function workflowState(trace, current = 0) {
+      if (!trace) return {completeTo: Math.max(-1, current - 1), current};
+      const diagnosis = trace.diagnosis || {};
+      const checks = [
+        Boolean(trace.phases?.workload_running), Boolean(trace.signal?.observed), trace.prometheus_alert?.state === 'firing',
+        Boolean(trace.webhook), diagnosis.returncode === 0, Boolean(diagnosis.report), trace.cleanup === 'ok'
+      ];
+      const firstIncomplete = checks.findIndex(value => !value);
+      return {completeTo: firstIncomplete === -1 ? 6 : firstIncomplete - 1, current: firstIncomplete === -1 ? -1 : firstIncomplete};
+    }
+
+    function deriveLiveStep(log = []) {
+      const text = log.join('\n').toLowerCase();
+      if (/report|diagnos.*finished/.test(text)) return 5;
+      if (/chat\/completions|run_diagnose|diagnos/.test(text)) return 4;
+      if (/webhook/.test(text)) return 3;
+      if (/alert.*firing|prometheus.*firing/.test(text)) return 2;
+      if (/threshold|signal.*observed|metric/.test(text)) return 1;
+      return 0;
+    }
+
+    function renderWorkflow(trace, current = 0) {
+      const state = workflowState(trace, current);
+      $('live-workflow').innerHTML = LIVE_STEPS.map((label, index) => {
+        const complete = index <= state.completeTo;
+        const active = index === state.current;
+        return `<li class="workflow-step${complete ? ' is-complete' : ''}${active ? ' is-current' : ''}" ${active ? 'aria-current="step"' : ''}><span class="workflow-marker">${complete ? '✓' : index + 1}</span><span class="workflow-label">${label}</span></li>`;
+      }).join('');
+      const progress = state.completeTo === 6 ? 100 : Math.max(8, Math.round(((Math.max(state.current, 0) + .4) / 7) * 100));
+      $('live-progress-bar').style.width = `${progress}%`;
+      $('live-run').querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(progress));
+    }
+
+    function e2eStatus(trace) {
+      const diagnosis = trace?.diagnosis || {};
+      const checks = [trace?.signal?.observed, trace?.prometheus_alert?.state === 'firing', trace?.webhook,
+        diagnosis.returncode === 0, diagnosis.report, trace?.cleanup === 'ok'];
+      if (checks.every(Boolean)) return {key:'success', label:'PASS', message:'Đã nhận alert, tạo báo cáo và cleanup workload thành công.'};
+      if (diagnosis.report && trace?.cleanup !== 'ok') return {key:'partial', label:'PARTIAL', message:'D-Bot đã tạo báo cáo nhưng cleanup chưa hoàn tất.'};
+      return {key:'failed', label:'FAILED', message:trace?.error || 'Lượt LIVE kết thúc nhưng chưa đủ điều kiện E2E.'};
+    }
+
+    function rootCauses(report) {
+      const match = String(report || '').match(/\|\s*Root Cause\s*\|(.*)\|\s*$/mi);
+      const source = match ? match[1] : String(report || '');
+      const lines = source.replace(/<br\s*\/?>/gi, '\n').split('\n').map(line => line.replace(/\*\*/g, '').replace(/\[\d+\]/g, '').replace(/^[-*\d.\s]+/, '').trim()).filter(line => line.length > 18 && !/root causes analysis|analysis report/i.test(line));
+      return [...new Set(lines)].slice(0, 3);
+    }
+
+    function consultationHTML(consultation, report, runId) {
+      const messages = consultation?.messages || [];
+      const participants = consultation?.participants || [...new Set(messages.map(message => message.sender))];
+      $('live-consultation-meta').innerHTML = `<span class="badge text-bg-light border">${participants.length} bot</span><span class="badge text-bg-light border">${messages.length} tin nhắn</span><span class="badge text-bg-success">Đã hoàn tất</span>`;
+      if (!messages.length) return '<div class="empty-state">Bản ghi LIVE này chưa lưu transcript hội chẩn có cấu trúc. Báo cáo và trace vẫn được giữ đầy đủ.</div>';
+      const causes = rootCauses(report);
+      return `<div class="participant-list mb-3" aria-label="Bot tham gia hội chẩn">${participants.map(name => `<span><span class="participant-dot" aria-hidden="true"></span>${esc(name)}</span>`).join('')}</div>
+        <aside class="consensus-card mb-4" aria-labelledby="consultation-consensus-title" data-testid="consultation-consensus"><h4 id="consultation-consensus-title" class="h6">Kết luận sau hội chẩn</h4><p class="mb-2">${esc(causes[0] || 'Báo cáo D-Bot đã được tạo sau khi các chuyên gia trao đổi.')}</p><div class="small text-secondary-emphasis">Gắn với run <span class="font-monospace">${esc(runId || '–')}</span></div></aside>
+        <details class="consultation-transcript" ${messages.length <= 8 ? 'open' : ''} data-testid="consultation-transcript"><summary>Toàn bộ hội thoại (${messages.length} tin nhắn)</summary><ol class="chat-thread mt-3">${messages.map((message, index) => {
+          const sender = message.sender || 'D-Bot';
+          const initials = sender.split(/(?=[A-Z])|\s+/).filter(Boolean).map(word => word[0]).join('').slice(0, 2).toUpperCase() || 'DB';
+          return `<li class="chat-message" data-message-id="${esc(message.id || `message-${index + 1}`)}" data-bot-id="${esc(sender.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}"><div class="bot-avatar" aria-hidden="true">${esc(initials)}</div><article class="chat-bubble"><header class="chat-message-head"><div><strong>${esc(sender)}</strong><span class="bot-role">${esc(BOT_ROLES[sender] || 'Chuyên gia D-Bot')}</span></div>${message.time ? `<time>${esc(message.time)}</time>` : ''}</header><p class="chat-message-text">${esc(message.text || message.data || '')}</p></article></li>`;
+        }).join('')}</ol></details>`;
+    }
+
+    function renderLiveResult(state) {
+      const trace = state.trace || {};
+      const diagnosis = trace.diagnosis || {};
+      const status = e2eStatus(trace);
+      $('live-result').hidden = false;
+      $('live-result-title').textContent = trace.title || selectedLiveScenario()?.title || 'Kết quả lượt LIVE';
+      $('live-result-message').textContent = status.message;
+      $('live-result-badge').className = `badge fs-6 align-self-start ${status.key === 'success' ? 'text-bg-success' : status.key === 'partial' ? 'text-bg-warning' : 'text-bg-danger'}`;
+      $('live-result-badge').textContent = status.label;
+      const causes = rootCauses(diagnosis.report);
+      $('live-root-causes').innerHTML = (causes.length ? causes : ['Không trích xuất được kết luận ngắn; xem báo cáo đầy đủ bên dưới.']).map(cause => `<li>${esc(cause)}</li>`).join('');
+      const samples = (trace.signal?.samples || []).flatMap(sample => sample.values || []).map(Number).filter(Number.isFinite);
+      const observed = samples.length ? Math.max(...samples) : null;
+      const evidence = [
+        ['Metric', trace.signal?.observed ? `${trace.metric || 'signal'} · ${observed ?? 'đạt ngưỡng'}` : 'Chưa đạt ngưỡng', trace.signal?.observed],
+        ['Prometheus alert', trace.prometheus_alert?.state || 'Chưa nhận', trace.prometheus_alert?.state === 'firing'],
+        ['Webhook', trace.webhook ? 'Đã nhận' : 'Chưa nhận', Boolean(trace.webhook)],
+        ['D-Bot report', diagnosis.report ? `${diagnosis.llm_calls || 0} lượt gọi LLM` : 'Chưa có', Boolean(diagnosis.report)],
+        ['Cleanup', trace.cleanup || 'Chưa xác nhận', trace.cleanup === 'ok']
+      ];
+      $('live-evidence').innerHTML = evidence.map(([label, value, ok]) => `<div class="list-group-item px-0 d-flex justify-content-between gap-3"><span>${esc(label)}</span><strong class="${ok ? 'text-success' : 'text-danger'} text-end">${esc(value)}</strong></div>`).join('');
+      $('live-consultation-body').innerHTML = consultationHTML(diagnosis.consultation, diagnosis.report, state.run_id);
+      $('live-ground-truth').innerHTML = (trace.ground_truth || []).map(label => `<span class="badge text-bg-light border me-1 mb-1">${esc(label)}</span>`).join('') || '<span class="text-secondary-emphasis">Không có nhãn đối chiếu.</span>';
+      $('live-report-text').textContent = diagnosis.report || trace.error || 'Không có báo cáo.';
+      $('live-technical').innerHTML = `<div class="row g-3"><div class="col-md-6"><h4 class="h6">Metadata</h4><dl class="row small mb-0"><dt class="col-5">run_id</dt><dd class="col-7 font-monospace">${esc(state.run_id || '–')}</dd><dt class="col-5">Scenario</dt><dd class="col-7">${esc(trace.scenario || state.scenario || '–')}</dd><dt class="col-5">Model</dt><dd class="col-7">${esc(diagnosis.model || liveConfig.model || '–')}</dd></dl></div><div class="col-md-6"><h4 class="h6">Trace rút gọn</h4><pre class="technical-code p-3 mb-0">${esc(JSON.stringify({threshold:trace.threshold, signal:trace.signal, prometheus_alert:trace.prometheus_alert, webhook:trace.webhook, diagnosis:{returncode:diagnosis.returncode,llm_calls:diagnosis.llm_calls,result_file:diagnosis.result_file}, cleanup:trace.cleanup, error:trace.error}, null, 2))}</pre></div></div>`;
+    }
+
+    function renderLiveState(state) {
+      const running = Boolean(state.running);
+      const hasTerminal = Boolean(state.trace || state.error);
+      if (!running && !hasTerminal) {
+        $('live-run').hidden = true;
+        $('live-result').hidden = true;
+        setLiveReadyState();
+        return;
+      }
+      $('live-run').hidden = false;
+      $('live-run').setAttribute('aria-busy', String(running));
+      $('live-run-title').textContent = running ? (liveStopping ? 'Đang dừng và cleanup' : 'D-Bot đang chẩn đoán') : 'Lượt LIVE đã kết thúc';
+      $('live-run-eyebrow').textContent = running ? 'LIVE · Đang chạy' : 'LIVE · Trạng thái cuối';
+      $('live-run-message').textContent = running ? `Kịch bản ${state.scenario || ''} đang xử lý. Không thể bắt đầu lượt thứ hai.` : (state.error || e2eStatus(state.trace).message);
+      $('live-run-id').textContent = state.run_id ? `run_id: ${state.run_id}` : '';
+      $('stop-live').disabled = !running || liveStopping;
+      $('stop-live').hidden = !running;
+      $('live-log').textContent = (state.log || []).slice(-120).join('\n');
+      $('live-last-update').textContent = new Date().toLocaleTimeString('vi-VN');
+      renderWorkflow(state.trace, deriveLiveStep(state.log));
+      document.querySelectorAll('input[name="live-scenario"]').forEach(input => input.disabled = running);
+      $('run-live').disabled = running || !liveConfig.llm_ready;
+      if (state.trace) renderLiveResult(state); else $('live-result').hidden = true;
+      if (!running && livePoll) { clearInterval(livePoll); livePoll = null; liveStopping = false; }
+    }
+
+    async function fetchLiveState() {
+      try {
+        const response = await fetch('/api/live/run/state');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const state = await response.json();
+        renderLiveState(state);
+        if (state.running && !livePoll) livePoll = setInterval(fetchLiveState, 1500);
+      } catch (error) {
+        $('live-status').classList.add('is-error');
+        $('live-status-title').textContent = 'Không đọc được trạng thái LIVE';
+        $('live-status-message').textContent = `Lỗi kết nối: ${error.message}`;
+      }
+    }
+
+    $('run-live').addEventListener('click', async () => {
+      const scenario = selectedLiveScenario();
+      if (!scenario) return;
+      $('run-live').disabled = true;
+      try {
+        const response = await fetch(`/api/live/run/${scenario.case}?diagnose=true`, {method:'POST'});
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.detail || 'Không khởi động được lượt LIVE');
+        liveStopping = false;
+        renderLiveState({running:true, case:scenario.case, scenario:scenario.scenario, run_id:body.run_id, log:[]});
+        if (livePoll) clearInterval(livePoll);
+        livePoll = setInterval(fetchLiveState, 1500);
+        fetchLiveState();
+      } catch (error) {
+        $('live-status').classList.add('is-error');
+        $('live-status-title').textContent = 'Không thể bắt đầu LIVE';
+        $('live-status-message').textContent = error.message;
+        renderLiveSelection();
+      }
+    });
+
+    $('stop-live').addEventListener('click', async () => {
+      liveStopping = true;
+      $('stop-live').disabled = true;
+      $('live-run-title').textContent = 'Đang dừng và cleanup';
+      try {
+        const response = await fetch('/api/live/run/stop', {method:'POST'});
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.detail || 'Không dừng được lượt LIVE');
+      } catch (error) {
+        liveStopping = false;
+        $('live-run-message').textContent = error.message;
+        $('stop-live').disabled = false;
+      }
+    });
+
+    async function initLive() {
+      try {
+        const [configResponse, stateResponse] = await Promise.all([fetch('/api/live/run/config'), fetch('/api/live/run/state')]);
+        if (!configResponse.ok || !stateResponse.ok) throw new Error('API LIVE chưa sẵn sàng');
+        liveConfig = await configResponse.json();
+        const state = await stateResponse.json();
+        if (state.case) liveSelected = Number(state.case);
+        renderLiveScenarios();
+        setLiveReadyState();
+        renderLiveState(state);
+        if (state.running) livePoll = setInterval(fetchLiveState, 1500);
+      } catch (error) {
+        $('live-status').classList.add('is-error');
+        $('live-status-title').textContent = 'Không tải được cấu hình LIVE';
+        $('live-status-message').textContent = error.message;
+        $('live-scenarios').innerHTML = '<div class="error-state">Không có dữ liệu kịch bản. Hãy kiểm tra dịch vụ demo.</div>';
+      }
+    }
+
+    function offlineCaseList() {
+      return `<div class="row g-4"><div class="col-lg-5"><fieldset class="list-group"><legend class="h5 mb-3">Dữ liệu mẫu</legend>${offlineCases.map(item => `<label class="list-group-item list-group-item-action d-flex gap-3 align-items-start"><input class="form-check-input mt-1" type="radio" name="offline-case" value="${item.id}" ${offlineSelected?.id === item.id ? 'checked' : ''}><span><strong class="d-block">${esc(item.title)}</strong><span class="small text-secondary-emphasis">${esc(item.alert)} · JSON đã lưu</span></span></label>`).join('')}</fieldset></div><div class="col-lg-7"><div id="offline-selection" class="rounded border p-3 p-md-4 h-100"></div></div></div>`;
+    }
+
+    function renderOfflineSelection() {
+      const container = $('offline-selection');
+      if (!container) return;
+      if (!offlineSelected) { container.innerHTML = '<div class="empty-state">Chọn một mẫu để xem phạm vi phân tích.</div>'; return; }
+      container.innerHTML = `<div class="eyebrow mb-2">Đang chọn</div><h3 class="h4">${esc(offlineSelected.title)}</h3><p class="text-secondary-emphasis">${esc(offlineSelected.desc)}</p><dl class="row small"><dt class="col-4">Nguồn</dt><dd class="col-8">Replay đã lưu</dd><dt class="col-4">Workload mới</dt><dd class="col-8">Không</dd><dt class="col-4">LLM</dt><dd class="col-8">Có thể được gọi khi phân tích lại</dd></dl><div class="d-flex flex-wrap gap-2"><button id="run-offline" class="btn btn-primary" type="button" data-testid="offline-run-button">Phân tích dữ liệu đã lưu</button><button id="replay-offline" class="btn btn-outline-secondary" type="button" ${offlineSelected.has_replay ? '' : 'disabled'}>Xem kết quả đã lưu</button><button id="view-offline-json" class="btn btn-outline-secondary" type="button">Xem JSON đầu vào</button></div><details id="offline-json-details" class="technical-details mt-3" hidden><summary>JSON cảnh báo đầu vào</summary><pre id="offline-json" class="technical-code p-3 mt-3"></pre></details>`;
+      $('run-offline').addEventListener('click', startOffline);
+      $('replay-offline').addEventListener('click', replayOffline);
+      $('view-offline-json').addEventListener('click', async () => {
+        const details = $('offline-json-details'); details.hidden = false; details.open = true;
+        try { const response = await fetch(`/api/alert/${offlineSelected.id}`); $('offline-json').textContent = JSON.stringify(await response.json(), null, 2); }
+        catch (error) { $('offline-json').textContent = `Không tải được JSON: ${error.message}`; }
+      });
+    }
+
+    async function loadOffline() {
+      offlineLoaded = true;
+      $('offline-content').className = 'loading-state';
+      $('offline-content').textContent = 'Đang tải năm ca Offline…';
+      try {
+        const [casesResponse, statusResponse] = await Promise.all([fetch('/api/cases'), fetch('/api/status')]);
+        if (!casesResponse.ok || !statusResponse.ok) throw new Error('API Offline chưa sẵn sàng');
+        offlineCases = await casesResponse.json();
+        const status = await statusResponse.json();
+        offlineSelected = offlineCases.find(item => item.id === status.case) || offlineCases[0] || null;
+        $('offline-content').className = '';
+        $('offline-content').innerHTML = offlineCaseList();
+        document.querySelectorAll('input[name="offline-case"]').forEach(input => input.addEventListener('change', event => {
+          offlineSelected = offlineCases.find(item => item.id === Number(event.target.value)); renderOfflineSelection();
+        }));
+        renderOfflineSelection();
+        if (status.running) { showOfflineProgress(); offlineTick(); offlinePoll = setInterval(offlineTick, 1500); }
+      } catch (error) {
+        $('offline-content').className = 'error-state';
+        $('offline-content').textContent = `Không tải được Offline: ${error.message}`;
+      }
+    }
+
+    function showOfflineProgress() {
+      $('offline-progress').hidden = false;
+      $('offline-result').hidden = true;
+      offlineLogN = 0;
+      $('offline-log').textContent = '';
+    }
+
+    async function startOffline() {
+      if (!offlineSelected) return;
+      try {
+        const response = await fetch(`/api/run/${offlineSelected.id}`, {method:'POST'});
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.detail || 'Không bắt đầu được lượt Offline');
+        showOfflineProgress();
+        if (offlinePoll) clearInterval(offlinePoll);
+        offlinePoll = setInterval(offlineTick, 1500);
+        offlineTick();
+      } catch (error) {
+        $('offline-result').hidden = false;
+        $('offline-result').innerHTML = `<div class="error-state">${esc(error.message)}</div>`;
+      }
+    }
+
+    $('stop-offline').addEventListener('click', async () => {
+      $('stop-offline').disabled = true;
+      await fetch('/api/stop', {method:'POST'}).catch(() => null);
+      offlineTick();
+    });
+
+    async function offlineTick() {
+      try {
+        const [statusResponse, logResponse] = await Promise.all([fetch('/api/status'), fetch(`/api/log?since=${offlineLogN}`)]);
+        const status = await statusResponse.json();
+        const log = await logResponse.json();
+        if (log.lines?.length) $('offline-log').textContent += `${log.lines.join('\n')}\n`;
+        offlineLogN = log.n || offlineLogN;
+        $('offline-stage').textContent = `${status.stage || 'Khởi động…'} · ${fmt(status.elapsed)} · ${status.llm_calls || 0} lượt gọi LLM`;
+        const progress = Number(status.progress || 0);
+        $('offline-progress-bar').style.width = `${progress}%`;
+        $('offline-progress').querySelector('[role="progressbar"]').setAttribute('aria-valuenow', String(progress));
+        $('offline-steps').innerHTML = (status.steps || []).map(step => `<div class="small text-secondary-emphasis">[${fmt(step.t)}] ${esc(step.text)}</div>`).join('');
+        $('offline-error').innerHTML = status.error ? `<div class="error-state">${esc(status.error)}</div>` : status.stopped && !status.running ? '<div class="error-state">Đã dừng theo yêu cầu.</div>' : '';
+        $('stop-offline').disabled = !status.running;
+        if (!status.running) {
+          if (offlinePoll) { clearInterval(offlinePoll); offlinePoll = null; }
+          if (status.result) renderStoredResult($('offline-result'), status.result, 'OFFLINE');
+        }
+      } catch (error) {
+        $('offline-error').innerHTML = `<div class="error-state">Mất kết nối polling: ${esc(error.message)}</div>`;
+      }
+    }
+
+    async function replayOffline() {
+      if (!offlineSelected) return;
+      try {
+        const response = await fetch(`/api/replay/${offlineSelected.id}`);
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.detail || 'Không mở được kết quả lưu sẵn');
+        renderStoredResult($('offline-result'), body, 'OFFLINE');
+      } catch (error) {
+        $('offline-result').hidden = false;
+        $('offline-result').innerHTML = `<div class="error-state">${esc(error.message)}</div>`;
+      }
+    }
+
+    function recordConsultation(record) {
+      const messages = record?.brainstorming?.messages || [];
+      return {participants:[...new Set(messages.map(message => message.sender || 'D-Bot'))], messages:messages.map((message, index) => ({id:`message-${index + 1}`, sender:message.sender || 'D-Bot', time:message.time || '', text:String(message.data || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, ' ').trim()}))};
+    }
+
+    function recordResultHTML(result, source) {
+      const record = result.record || {};
+      const causes = rootCauses(record.report);
+      const consultation = recordConsultation(record);
+      const participants = consultation.participants;
+      const messages = consultation.messages;
+      const chat = messages.length ? `<div class="participant-list mb-3">${participants.map(name => `<span><span class="participant-dot"></span>${esc(name)}</span>`).join('')}</div><details class="consultation-transcript" ${messages.length <= 8 ? 'open' : ''}><summary>Hội thoại hội chẩn (${messages.length} tin nhắn)</summary><ol class="chat-thread mt-3">${messages.map((message, index) => `<li class="chat-message" data-message-id="message-${index + 1}"><div class="bot-avatar">${esc(message.sender.slice(0, 2).toUpperCase())}</div><article class="chat-bubble"><header class="chat-message-head"><strong>${esc(message.sender)}</strong><time>${esc(message.time)}</time></header><p class="chat-message-text">${esc(message.text)}</p></article></li>`).join('')}</ol></details>` : '<div class="empty-state">Bản ghi này không có transcript hội chẩn.</div>';
+      const caseInfo = offlineCases.find(item => item.id === result.case);
+      return `<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4"><div><div class="eyebrow mb-2">${esc(source)} · Kết quả đã lưu</div><h2 class="h3 mb-2">${esc(caseInfo?.title || record.title || 'Kết quả chẩn đoán')}</h2><p class="text-secondary-emphasis mb-0">${result.finished_at ? new Date(result.finished_at * 1000).toLocaleString('vi-VN') : ''}${result.model ? ` · ${esc(result.model)}` : ''}</p></div><span class="badge ${source === 'LIVE' ? 'source-live' : 'source-offline'} align-self-start">${esc(source)}</span></div><div class="report-panel rounded p-3 mb-4"><h3 class="h5">Kết luận D-Bot</h3><ul class="result-root-causes">${(causes.length ? causes : ['Xem báo cáo đầy đủ bên dưới.']).map(cause => `<li>${esc(cause)}</li>`).join('')}</ul></div><section class="rounded border p-3 p-md-4 mb-4"><div class="eyebrow mb-2">Hội chẩn đa bot</div><h3 class="h4">Hội thoại chuyên gia</h3>${chat}</section>${caseInfo?.labels?.length ? `<details class="technical-details rounded border p-3 mb-4"><summary>Đáp án chuẩn · chỉ dùng để đối chiếu sau khi hoàn tất</summary><div class="pt-3">${caseInfo.labels.map(label => `<span class="badge text-bg-light border me-1">${esc(label)}</span>`).join('')}</div></details>` : ''}<details class="technical-details rounded border p-3" open><summary>Báo cáo đầy đủ</summary><pre class="report-pre p-3 mt-3 mb-0">${esc(record.report || 'Không có báo cáo.')}</pre></details>`;
+    }
+
+    function renderStoredResult(container, result, source) {
+      container.hidden = false;
+      container.innerHTML = recordResultHTML(result, source);
+      container.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    async function loadHistory(page = 1) {
+      historyLoaded = true;
+      historyPage = page;
+      $('history-content').className = 'loading-state';
+      $('history-content').textContent = 'Đang tải lịch sử…';
+      $('history-pagination').hidden = true;
+      try {
+        const query = $('history-query').value.trim();
+        const response = await fetch(`/api/history?page=${page}&page_size=25&q=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        historyPages = data.pages || 1;
+        $('history-total').textContent = `${data.total} báo cáo`;
+        if (!data.items.length) {
+          $('history-content').className = 'empty-state';
+          $('history-content').textContent = 'Không có báo cáo phù hợp.';
+          return;
+        }
+        $('history-content').className = 'table-responsive';
+        $('history-content').innerHTML = `<table class="table history-table align-middle mb-0"><thead class="table-light"><tr><th>Thời gian</th><th>Kịch bản</th><th>Nguồn</th><th>Trạng thái</th><th>Model / bộ</th><th><span class="visually-hidden">Hành động</span></th></tr></thead><tbody>${data.items.map(item => `<tr><td>${item.time ? new Date(item.time * 1000).toLocaleString('vi-VN') : '–'}</td><td><strong>${esc(item.title || (item.case ? `Ca ${item.case}` : 'Báo cáo'))}</strong><div class="small text-secondary-emphasis font-monospace">${esc(item.id)}</div></td><td><span class="badge ${item.source === 'LIVE' ? 'source-live' : 'source-offline'}">${esc(item.source || 'OFFLINE')}</span></td><td>${esc(item.status || 'Hoàn tất')}</td><td>${esc(item.model || item.set || '–')}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" data-history-id="${esc(item.id)}" data-history-source="${esc(item.source || 'OFFLINE')}" aria-label="Mở báo cáo ${esc(item.title || item.id)}">Mở báo cáo</button></td></tr>`).join('')}</tbody></table>`;
+        document.querySelectorAll('[data-history-id]').forEach(button => button.addEventListener('click', () => openHistoryResult(button.dataset.historyId, button.dataset.historySource)));
+        $('history-pagination').hidden = false;
+        $('history-page').textContent = `Trang ${data.page} / ${historyPages}`;
+        $('history-prev').disabled = data.page <= 1;
+        $('history-next').disabled = data.page >= historyPages;
+      } catch (error) {
+        $('history-content').className = 'error-state';
+        $('history-content').textContent = `Không tải được lịch sử: ${error.message}`;
+      }
+    }
+
+    async function openHistoryResult(id, source = 'ĐÃ LƯU') {
+      $('history-result').hidden = false;
+      $('history-result').innerHTML = '<div class="loading-state">Đang mở báo cáo…</div>';
+      try {
+        const response = await fetch(`/api/result?id=${encodeURIComponent(id)}`);
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.detail || 'Không mở được báo cáo');
+        renderStoredResult($('history-result'), body, source);
+      } catch (error) {
+        $('history-result').innerHTML = `<div class="error-state">${esc(error.message)}</div>`;
+      }
+    }
+
+    $('history-form').addEventListener('submit', event => { event.preventDefault(); loadHistory(1); });
+    $('history-prev').addEventListener('click', () => loadHistory(Math.max(1, historyPage - 1)));
+    $('history-next').addEventListener('click', () => loadHistory(Math.min(historyPages, historyPage + 1)));
+
+    initLive();
+  </script>
+</body>
+</html>

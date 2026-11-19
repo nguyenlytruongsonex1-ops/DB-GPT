@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D-Bot — Kết quả LIVE</title>
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="mockups.css" rel="stylesheet">
+</head>
+<body>
+  <header class="bg-white border-bottom">
+    <div class="container app-shell py-3 d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3"><div class="brand-mark" aria-hidden="true">DB</div><div><div class="fw-bold fs-5 lh-sm">D-Bot</div><div class="small text-secondary-emphasis">Demo chẩn đoán PostgreSQL E2E</div></div></div>
+      <span class="badge text-bg-light border">Bản tĩnh để review</span>
+    </div>
+  </header>
+
+  <main class="container app-shell py-4 py-lg-5">
+    <nav aria-label="Chế độ D-Bot"><div class="nav nav-tabs mb-4" role="tablist"><a class="nav-link active" href="index.html" role="tab" aria-selected="true" data-testid="tab-live">LIVE</a><a class="nav-link" href="offline.html" role="tab" aria-selected="false" data-testid="tab-offline">Offline</a><a class="nav-link" href="history.html" role="tab" aria-selected="false" data-testid="tab-history">Lịch sử</a></div></nav>
+
+    <div class="review-switcher p-3 mb-4 d-flex flex-wrap align-items-center gap-2"><span class="small fw-semibold me-2">Review trạng thái LIVE:</span><a class="btn btn-outline-secondary btn-sm" href="index.html">Sẵn sàng</a><a class="btn btn-outline-secondary btn-sm" href="live-running.html">Đang chạy</a><a class="btn btn-primary btn-sm" href="live-result.html" aria-current="page">Kết quả</a></div>
+
+    <section class="status-strip surface p-3 p-md-4 mb-4" aria-labelledby="result-title" data-testid="live-result">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <div><div class="eyebrow mb-2">LIVE · Hoàn tất E2E</div><h1 id="result-title" class="h3 mb-2">Ghi dữ liệu đồng thời</h1><p class="mb-0 text-secondary-emphasis">Đã nhận alert, tạo báo cáo và cleanup workload thành công.</p></div>
+        <div class="text-lg-end"><span class="badge text-bg-success fs-6 mb-2">PASS</span><div class="small text-secondary-emphasis">2 phút 43 giây · live-04-153842</div></div>
+      </div>
+    </section>
+
+    <section class="surface p-3 p-md-4 mb-4" aria-labelledby="workflow-title" data-testid="live-workflow">
+      <div class="d-flex justify-content-between gap-2 mb-4"><div><div class="eyebrow mb-2">Workflow E2E</div><h2 id="workflow-title" class="h4 mb-0">Đã xác nhận đủ bảy bước</h2></div><span class="small text-success fw-semibold">Cleanup · OK</span></div>
+      <ol class="workflow" aria-label="Các bước chẩn đoán LIVE đã hoàn tất">
+        <li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Workload</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Metric</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Alert</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Webhook</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">D-Bot</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Report</span></li><li class="workflow-step is-complete"><span class="workflow-marker">✓</span><span class="workflow-label">Cleanup</span></li>
+      </ol>
+    </section>
+
+    <div class="row g-4">
+      <section class="col-lg-7" aria-labelledby="diagnosis-title">
+        <div class="surface p-3 p-md-4 h-100">
+          <div class="eyebrow mb-2">Kết luận D-Bot</div>
+          <h2 id="diagnosis-title" class="h3">Tranh chấp tài nguyên khi nhiều phiên ghi đồng thời</h2>
+          <p class="text-secondary-emphasis">Các phiên ghi cùng lúc làm tăng tiến trình chờ và tải hệ thống. Đây là nguyên nhân phù hợp nhất với tín hiệu đã quan sát trong lượt chạy.</p>
+          <div class="report-panel rounded p-3">
+            <h3 class="h6">Khuyến nghị ưu tiên</h3>
+            <ul class="mb-0"><li>Giới hạn số tác vụ ghi đồng thời.</li><li>Chia batch nhỏ hơn và theo dõi lock wait.</li><li>Rà lại transaction dài trước khi tăng tài nguyên.</li></ul>
+          </div>
+        </div>
+      </section>
+      <section class="col-lg-5" aria-labelledby="evidence-title">
+        <div class="surface p-3 p-md-4 h-100">
+          <div class="eyebrow mb-2">Bằng chứng chính</div>
+          <h2 id="evidence-title" class="h4">Tín hiệu hỗ trợ kết luận</h2>
+          <div class="list-group list-group-flush mt-3">
+            <div class="list-group-item px-0 d-flex justify-content-between gap-3"><span>Node load</span><strong>1,59 · vượt ngưỡng</strong></div>
+            <div class="list-group-item px-0 d-flex justify-content-between gap-3"><span>Blocked processes</span><strong>4</strong></div>
+            <div class="list-group-item px-0 d-flex justify-content-between gap-3"><span>Prometheus alert</span><strong class="text-success">Firing</strong></div>
+            <div class="list-group-item px-0 d-flex justify-content-between gap-3"><span>Webhook</span><strong class="text-success">Đã nhận</strong></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section id="consultation-chat" class="surface consultation-panel p-3 p-md-4 mt-4" aria-labelledby="consultation-title" data-testid="consultation-summary">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+        <div>
+          <div class="eyebrow mb-2">Hội chẩn đa bot</div>
+          <h2 id="consultation-title" class="h4 mb-2">Các bot đã trao đổi trước khi chốt kết luận</h2>
+          <p class="text-secondary-emphasis mb-0">Transcript chỉ gồm các tin nhắn được gửi trong phiên hội chẩn và bằng chứng mà từng bot viện dẫn.</p>
+        </div>
+        <div class="consultation-meta align-self-lg-start" aria-label="Thông tin phiên hội chẩn">
+          <span class="badge text-bg-light border">4 bot</span>
+          <span class="badge text-bg-light border">5 tin nhắn</span>
+          <span class="badge text-bg-success">Đã đồng thuận</span>
+        </div>
+      </div>
+
+      <div class="participant-list mb-4" aria-label="Bot tham gia hội chẩn">
+        <span><span class="participant-dot bot-observer" aria-hidden="true"></span>Bot Giám sát</span>
+        <span><span class="participant-dot bot-postgres" aria-hidden="true"></span>Bot PostgreSQL</span>
+        <span><span class="participant-dot bot-reviewer" aria-hidden="true"></span>Bot Phản biện</span>
+        <span><span class="participant-dot bot-coordinator" aria-hidden="true"></span>D-Bot Điều phối</span>
+      </div>
+
+      <aside class="consensus-card mb-4" aria-labelledby="consensus-title" data-testid="consultation-consensus">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-2"><h3 id="consensus-title" class="h6 mb-0">Đồng thuận cuối</h3><span class="small text-success fw-semibold">4/4 bot đồng ý</span></div>
+        <p class="mb-2"><strong>Nguyên nhân phù hợp nhất:</strong> nhiều phiên ghi đồng thời gây tranh chấp tài nguyên; cần kiểm tra transaction dài trước khi mở rộng tài nguyên.</p>
+        <div class="small text-secondary-emphasis">Chốt lúc 15:40:43 · 52 giây · Gắn với run <span class="font-monospace">live-04-153842</span></div>
+      </aside>
+
+      <details class="consultation-transcript" open data-testid="consultation-transcript">
+        <summary>Toàn bộ hội thoại (5 tin nhắn)</summary>
+      <ol class="chat-thread mt-3" aria-label="Hội thoại giữa các bot">
+        <li class="chat-message" data-message-id="msg-01" data-bot-id="observer">
+          <div class="bot-avatar bot-observer" aria-hidden="true">GS</div>
+          <article class="chat-bubble" aria-labelledby="message-1-author">
+            <header class="chat-message-head"><div><strong id="message-1-author">Bot Giám sát</strong><span class="bot-role">Phân tích metric</span></div><time datetime="2026-11-19T15:40:06+07:00">15:40:06</time></header>
+            <p>Alert đang firing. Node load đạt 1,59 và có 4 tiến trình bị chặn trong cùng khoảng thời gian workload hoạt động.</p>
+            <div class="evidence-chips" aria-label="Bằng chứng được viện dẫn"><span>Node load · 1,59</span><span>Blocked processes · 4</span></div>
+          </article>
+        </li>
+        <li class="chat-message" data-message-id="msg-02" data-bot-id="postgres">
+          <div class="bot-avatar bot-postgres" aria-hidden="true">PG</div>
+          <article class="chat-bubble" aria-labelledby="message-2-author">
+            <header class="chat-message-head"><div><strong id="message-2-author">Bot PostgreSQL</strong><span class="bot-role">Chuyên gia cơ sở dữ liệu</span></div><time datetime="2026-11-19T15:40:14+07:00">15:40:14</time></header>
+            <p>Tín hiệu phù hợp với nhiều phiên ghi đồng thời giữ transaction lâu hơn dự kiến. Nên ưu tiên kiểm tra lock wait và transaction đang mở.</p>
+            <div class="reply-context">Phản hồi Bot Giám sát · “4 tiến trình bị chặn”</div>
+          </article>
+        </li>
+        <li class="chat-message" data-message-id="msg-03" data-bot-id="reviewer">
+          <div class="bot-avatar bot-reviewer" aria-hidden="true">PB</div>
+          <article class="chat-bubble" aria-labelledby="message-3-author">
+            <header class="chat-message-head"><div><strong id="message-3-author">Bot Phản biện</strong><span class="bot-role">Kiểm tra giả thuyết</span></div><time datetime="2026-11-19T15:40:23+07:00">15:40:23</time></header>
+            <p>Node load cao chưa đủ để kết luận tranh chấp ghi. Cần giữ mức tin cậy ở “phù hợp nhất với bằng chứng hiện có” và không loại trừ transaction dài.</p>
+            <div class="evidence-chips" aria-label="Điểm cần kiểm tra"><span>Cần đối chiếu lock wait</span><span>Không suy diễn từ load đơn lẻ</span></div>
+          </article>
+        </li>
+        <li class="chat-message" data-message-id="msg-04" data-bot-id="postgres">
+          <div class="bot-avatar bot-postgres" aria-hidden="true">PG</div>
+          <article class="chat-bubble" aria-labelledby="message-4-author">
+            <header class="chat-message-head"><div><strong id="message-4-author">Bot PostgreSQL</strong><span class="bot-role">Chuyên gia cơ sở dữ liệu</span></div><time datetime="2026-11-19T15:40:31+07:00">15:40:31</time></header>
+            <p>Đồng ý. Tôi điều chỉnh kết luận: concurrent writes là nguyên nhân chính có khả năng cao; transaction dài là yếu tố cần kiểm tra trước khi tăng tài nguyên.</p>
+          </article>
+        </li>
+        <li class="chat-message is-coordinator" data-message-id="msg-05" data-bot-id="coordinator">
+          <div class="bot-avatar bot-coordinator" aria-hidden="true">ĐP</div>
+          <article class="chat-bubble" aria-labelledby="message-5-author">
+            <header class="chat-message-head"><div><strong id="message-5-author">D-Bot Điều phối</strong><span class="bot-role">Tổng hợp kết luận</span></div><time datetime="2026-11-19T15:40:43+07:00">15:40:43</time></header>
+            <p>Đã đủ bằng chứng để chốt báo cáo. Giữ hai khuyến nghị ưu tiên: giới hạn tác vụ ghi đồng thời và rà transaction dài; không khẳng định thiếu tài nguyên.</p>
+          </article>
+        </li>
+      </ol>
+      </details>
+    </section>
+
+    <section class="surface p-3 p-md-4 mt-4" aria-labelledby="report-title">
+      <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3"><div><div class="eyebrow mb-2">Báo cáo</div><h2 id="report-title" class="h4 mb-0">Tóm tắt chẩn đoán</h2></div><span class="badge text-bg-light border align-self-start">Nguồn: LIVE</span></div>
+      <p>D-Bot ghi nhận tải máy và số tiến trình bị chặn tăng trong thời gian workload ghi đồng thời hoạt động. Báo cáo ưu tiên kiểm soát concurrency và thời lượng transaction; chi tiết metric, lời gọi model và trace được giữ ở phần kỹ thuật.</p>
+      <div class="d-flex flex-wrap gap-2"><a class="btn btn-primary" href="index.html">Chạy kịch bản khác</a><a class="btn btn-outline-secondary" href="#consultation-chat">Xem hội thoại hội chẩn</a><a class="btn btn-outline-secondary" href="#technical-details">Xem chi tiết kỹ thuật</a></div>
+    </section>
+
+    <details id="technical-details" class="surface technical-details p-3 p-md-4 mt-4" data-testid="technical-details">
+      <summary>Chi tiết kỹ thuật: trace, metric và metadata</summary>
+      <div class="row g-3"><div class="col-md-6"><h3 class="h6">Điều kiện E2E</h3><ul class="small mb-0"><li>Signal observed: true</li><li>Alert firing: true</li><li>Webhook received: true</li><li>Diagnosis return code: 0</li><li>Report present: true</li><li>Cleanup: ok</li></ul></div><div class="col-md-6"><h3 class="h6">Metadata</h3><dl class="row small mb-0"><dt class="col-5">Scenario</dt><dd class="col-7">concurrent_writes</dd><dt class="col-5">Nguồn</dt><dd class="col-7">LIVE</dd><dt class="col-5">Thời lượng</dt><dd class="col-7">2:43</dd></dl></div></div>
+    </details>
+  </main>
+</body>
+</html>
